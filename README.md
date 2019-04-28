@@ -22,31 +22,62 @@ pip install HTMLReport
 
 ```python
 import unittest
-import HTMLReport
+import random
+from HTMLReport import (TestRunner,
+                        log,
+                        ddt,
+                        retry)
 
-# 测试套件
-suite = unittest.TestSuite()
-# 测试用例加载器
-loader = unittest.TestLoader()
-# 把测试用例加载到测试套件中
-suite.addTests(loader.loadTestsFromTestCase(TestStringMethods))
 
-# 测试用例执行器
-runner = HTMLReport.TestRunner(report_file_name='test',  # 报告文件名，如果未赋值，将采用“test+时间戳”
-                               output_path='report',  # 保存文件夹名，默认“report”
-                               title='测试报告',  # 报告标题，默认“测试报告”
-                               description='无测试描述',  # 报告描述，默认“测试描述”
-                               thread_count=1,  # 并发线程数量（无序执行测试），默认数量 1
-                               thread_start_wait=3,  # 各线程启动延迟，默认 0 s
-                               sequential_execution=False,  # 是否按照套件添加(addTests)顺序执行，
-                               # 会等待一个addTests执行完成，再执行下一个，默认 False
-                               # 如果用例中存在 tearDownClass ，建议设置为True，
-                               # 否则 tearDownClass 将会在所有用例线程执行完后才会执行。
-                               # lang='en'
-                               lang='cn'  # 支持中文与英文，默认中文
-                               )
-# 执行测试用例套件
-runner.run(suite)
+class TS_1(unittest.TestCase):
+    def setUp(self) -> None:
+        log.info("测试开始")
+
+    def tearDown(self) -> None:
+        log.info("测试结束")
+
+    def test_true(self):
+        self.assertTrue(True)
+
+    def test_false(self):
+        self.assertTrue(False)
+
+    def test_error(self):
+        self.assertTrue(int("5.2"))
+
+
+@ddt.ddt
+class TS_2(unittest.TestCase):
+    def setUp(self) -> None:
+        log.info("测试开始")
+
+    def tearDown(self) -> None:
+        log.info("测试结束")
+
+    @ddt.data(*range(1, 6))
+    @retry
+    def test_a(self, n):
+        self.assertEqual(n, random.randint(1, 6))
+
+
+if __name__ == '__main__':
+    suite = unittest.TestSuite()
+    loader = unittest.TestLoader()
+    suite.addTests(loader.loadTestsFromTestCase(TS_1))
+    suite.addTests(loader.loadTestsFromTestCase(TS_2))
+
+    TestRunner(
+        report_file_name='index',
+        output_path='report',
+        title='一个简单的测试报告',
+        description='随意描述',
+        thread_count=5,
+        thread_start_wait=0,
+        tries=5,
+        retry=False,
+        sequential_execution=True,
+        lang='cn'
+    ).run(suite)
 ```
 
 ### 日志
@@ -54,13 +85,13 @@ runner.run(suite)
 为测试报告中添加过程日志，在多线程下，在报告中会分别记录每个线程的日志，同时会产生与测试报告同名的测试 log 文件。
 
 ```python
-from HTMLReport import logger
+from HTMLReport import log
 
-logger().info("测试")
-logger().debug("测试")
-logger().warning("测试")
-logger().error("测试")
-logger().critical("测试")
+log.info("测试")
+log.debug("测试")
+log.warning("测试")
+log.error("测试")
+log.critical("测试")
 ```
 
 ### 图片信息
@@ -83,6 +114,12 @@ with open("baidu.png", 'rb') as f:
 ### 失败重试
 
 测试方法前加入装饰器 `@retry` `@no_retry`，用于重试与不重试
+
+### 数据驱动
+
+测试类前加入装饰器 `@ddt.ddt` 
+
+测试方法前加入装饰器 `@ddt.data(*data)`
 
 >
 

@@ -14,12 +14,15 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 import datetime
+import json
 import os
 import queue
 import random
 import time
 from concurrent.futures import ThreadPoolExecutor
-from unittest.suite import _isnotsuite, TestSuite
+from threading import Thread
+from unittest.suite import TestSuite
+from urllib import request
 from xml.sax import saxutils
 
 from .tools.log.logger import GeneralLogger
@@ -29,6 +32,36 @@ from .tools.result import Result
 from .tools.template import TemplateMixin
 from .tools import save_images
 from .tools.log import logger
+
+msg = None
+
+
+def _isnotsuite(test):
+    """A crude way to tell apart testcases and suites with duck-typing
+
+    :param test:
+    :return:
+    """
+    try:
+        iter(test)
+    except TypeError:
+        return True
+    return False
+
+
+def quert_version():
+    try:
+        global msg
+        r = request.urlopen('https://pypi.org/pypi/htmlreport/json', timeout=2)
+        version = json.loads(r.read().decode('utf-8')).get("info").get("version")
+        for x, y in zip(version.split("."), __version__.split(".")):
+            if int(x) < int(y):
+                break
+            elif int(x) == int(y):
+                continue
+            msg = f"\n当前版本：{__version__}\t已发布最新版本：{version}\n请使用命令\t'pip install -U lsbook'\t升级"
+    except:
+        pass
 
 
 class TestRunner(TemplateMixin, TestSuite):
@@ -133,6 +166,9 @@ class TestRunner(TemplateMixin, TestSuite):
         :param test: 测试用例或套件
         :param debug: 调试模式下不会产生测试报告文件，但会产生日志文件
         """
+        th = Thread(target=quert_version)
+        th.start()
+
         result = Result(self.LANG, self.tries, self.delay, self.back_off, self.max_delay, self.retry)
         if self.LANG == "cn":
             self.main_logger.info("预计并发线程数：" + str(self.thread_count))
@@ -171,21 +207,25 @@ class TestRunner(TemplateMixin, TestSuite):
 
         if self.LANG == "cn":
             s = '\n测试结束！\n运行时间: {time}\n共计执行用例数量：{count}\n执行成功用例数量：{Pass}' \
-                '\n执行失败用例数量：{fail}\n跳过执行用例数量：{skip}\n产生异常用例数量：{error}'
+                '\n执行失败用例数量：{fail}\n跳过执行用例数量：{skip}\n产生异常用例数量：{error}\n'
         else:
             s = '\nEOT！\nRan {count} tests in {time}\n\nPASS：{Pass}' \
-                '\nFailures：{fail}\nSkipped：{skip}\nErrors：{error}'
+                '\nFailures：{fail}\nSkipped：{skip}\nErrors：{error}\n'
         count = result.success_count + result.failure_count + result.error_count + result.skip_count
-        s = s.format(time=self.stopTime - self.startTime,
-                     count=count,
-                     Pass=result.success_count,
-                     fail=result.failure_count,
-                     skip=result.skip_count,
-                     error=result.error_count
-                     )
+        s = s.format(
+            time=self.stopTime - self.startTime,
+            count=count,
+            Pass=result.success_count,
+            fail=result.failure_count,
+            skip=result.skip_count,
+            error=result.error_count
+        )
         if not debug:
             self._generateReport(result)
         self.main_logger.info(s)
+        th.join()
+        if msg:
+            self.main_logger.warning(msg)
         return result
 
     @staticmethod
@@ -206,6 +246,7 @@ class TestRunner(TemplateMixin, TestSuite):
                 remap[cls] = []
                 classes.append(cls)
             remap[cls].append((n, t, o, i, r, s))
+            # remap[cls].append((n, t, o, i, r, s))
         r = [(cls, remap[cls]) for cls in classes]
         return r
 

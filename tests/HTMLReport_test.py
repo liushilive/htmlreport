@@ -48,7 +48,8 @@ class test_1th(unittest.TestCase):
             addImage(image, "百度 {}".format(random.randint(0, 10)), alt)
             addImage(image, "百度 {}".format(random.randint(0, 10)), alt)
             addImage(image, "百度 {}".format(random.randint(0, 10)), alt)
-        raise ValueError
+        if random.randint(1, 6) != 6:
+            raise ValueError
 
     def test_isupper(self):
         """测试isupper"""
@@ -123,20 +124,17 @@ if __name__ == '__main__':
     suite.addTests(loader.loadTestsFromTestCase(test_第三个测试))
 
     # 测试用例执行器
-    runner = HTMLReport.TestRunner(report_file_name='test',  # 报告文件名，如果未赋值，将采用“test+时间戳”
-                                   output_path='report',  # 保存文件夹名，默认“report”
-                                   title='一个简单的测试报告',  # 报告标题，默认“测试报告”
-                                   description='随意描述',  # 报告描述，默认“无测试描述”
-                                   thread_count=5,  # 并发线程数量（无序执行测试），默认数量 1
-                                   thread_start_wait=0,  # 各线程启动延迟，默认 0 s
-                                   tries=5,
-                                   retry=True,
-                                   sequential_execution=True,  # 是否按照套件添加(addTests)顺序执行，
-                                   # 会等待一个addTests执行完成，再执行下一个，默认 False
-                                   # 如果用例中存在 tearDownClass ，建议设置为True，
-                                   # 否则 tearDownClass 将会在所有用例线程执行完后才会执行。
-                                   # lang='en'
-                                   lang='cn'  # 支持中文与英文，默认中文
-                                   )
+    runner = HTMLReport.TestRunner(
+        report_file_name='index',
+        output_path='report',
+        title='一个简单的测试报告',
+        description='随意描述',
+        thread_count=5,
+        thread_start_wait=0,
+        tries=5,
+        retry=True,
+        sequential_execution=True,
+        lang='cn'
+    )
     # 执行测试用例套件
     runner.run(suite)

@@ -165,6 +165,10 @@ class Result(TestResult):
         if current_id not in self.success_set:
             self.success_count += 1
             self.success_set.add(current_id)
+        if current_id in self.failure_set:
+            self.failure_count -= 1
+        if current_id in self.error_set:
+            self.error_count -= 1
 
     def addError(self, test, err):
         TestResult.addError(self, test, err)
