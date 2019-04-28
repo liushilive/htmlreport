@@ -43,6 +43,7 @@ def logger():
     from HTMLReport import log
 
     log.info("")
+    
     """, DeprecationWarning, stacklevel=2)
 
     return tools.log.logger.GeneralLogger().get_logger()
@@ -54,12 +55,14 @@ def AddImage(base64_data: bytes, title: str = "", describe: str = ""):
     from HTMLReport import addImage
 
     addImage(base64_data, title, describe)
+
     """
     warnings.warn("""不赞同使用此方法，请使用
     
     from HTMLReport import addImage
     
     addImage(base64_data, title, describe)
+    
     """, DeprecationWarning, stacklevel=2)
 
     addImage(base64_data, title, describe)
