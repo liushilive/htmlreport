@@ -7,7 +7,6 @@ import HTMLReport
 from HTMLReport import addImage, logger, ddt, retry, no_retry, log
 
 
-# HTMLReport.Log
 def parse_int(s):
     return int(s)
 

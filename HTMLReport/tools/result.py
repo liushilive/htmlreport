@@ -88,8 +88,8 @@ class Result(TestResult):
             end_time - self.time[str(threading.current_thread().ident)]))
         current_id = str(threading.current_thread().ident)
         tries = self.result_tmp[current_id]['tries']
-        if current_id in SaveImages.imageList:
-            tmp = SaveImages.imageList.pop(current_id)
+        if current_id in save_images.imageList:
+            tmp = save_images.imageList.pop(current_id)
             self.result_tmp[current_id]["image_paths"][tries] = tmp
         tmp = HandlerFactory.get_stream_value()
         self.result_tmp[current_id]['test_output'][tries] = tmp
