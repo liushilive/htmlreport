@@ -32,7 +32,7 @@ LOG_TARGET_CONSOLE = 0x1
 LOG_TARGET_LOG_FILE = 0x10
 LOG_TARGET_LOG_HTTP = 0x100
 
-_LOGGER_FORMAT = "[%(levelname)7s] [%(asctime)s] [%(thread)d] [%(filename)s(%(lineno)d)] - %(message)s"
+_LOGGER_FORMAT = "%(asctime)s %(levelname)7s %(thread)d %(filename)s(%(lineno)d) - %(message)s"
 
 
 class InfoOrLessCritical(logging.Filter):

@@ -16,7 +16,7 @@ under the License.
 import logging.handlers
 import os
 
-from .HandlerFactory import *
+from .handler_factory import *
 
 
 class InfoOrLessCritical(logging.Filter):
@@ -139,3 +139,31 @@ class GeneralLogger(object):
             self._loggers[self._main_thread_id].disabled = self._log_by_thread
         except KeyError:
             pass
+
+
+class Log(object):
+    @property
+    def debug(self):
+        return GeneralLogger().get_logger().debug
+
+    @property
+    def info(self):
+        return GeneralLogger().get_logger().info
+
+    @property
+    def warning(self):
+        return GeneralLogger().get_logger().warning
+
+    @property
+    def error(self):
+        return GeneralLogger().get_logger().error
+
+    @property
+    def exception(self):
+        return GeneralLogger().get_logger().exception
+
+    @property
+    def critical(self):
+        return GeneralLogger().get_logger().critical
+
+    fatal = critical

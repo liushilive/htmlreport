@@ -7,6 +7,7 @@ import HTMLReport
 from HTMLReport import addImage, logger, ddt, retry, no_retry, log
 
 
+# HTMLReport.Log
 def parse_int(s):
     return int(s)
 
@@ -18,7 +19,8 @@ LOG = logging.getLogger(__name__)
 class test_1th(unittest.TestCase):
     def setUp(self):
         # logger().info("setUp")
-        log.info("setUp")
+        log.debug("setUp")
+        # log.info("setUp")
 
     def tearDown(self):
         log.info("tearDown")
@@ -65,7 +67,7 @@ class test_1th(unittest.TestCase):
 
     @no_retry
     def test_fail(self):
-        logger().info("测试失败")
+        log.info("测试失败")
         self.assertEqual(30, self.i, "相等")
 
     @unittest.skip("这是一个跳过的测试")

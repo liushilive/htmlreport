@@ -22,12 +22,13 @@ from concurrent.futures import ThreadPoolExecutor
 from unittest.suite import _isnotsuite, TestSuite
 from xml.sax import saxutils
 
+from .tools.log.logger import GeneralLogger
+
 from . import __author__, __version__
-from .tools.Result import Result
-from .tools.Template import TemplateMixin
-from .tools import SaveImages
-from .tools.log import Logger
-from HTMLReport import log
+from .tools.result import Result
+from .tools.template import TemplateMixin
+from .tools import save_images
+from .tools.log import logger
 
 
 class TestRunner(TemplateMixin, TestSuite):
@@ -68,7 +69,7 @@ class TestRunner(TemplateMixin, TestSuite):
         self.thread_start_wait = thread_start_wait
         self.sequential_execution = sequential_execution
 
-        SaveImages.report_path = report_path = os.path.join(output_path or "report")
+        save_images.report_path = report_path = os.path.join(output_path or "report")
         dir_to = os.path.join(os.getcwd(), report_path)
         if not os.path.exists(dir_to):
             os.makedirs(dir_to)
@@ -79,10 +80,10 @@ class TestRunner(TemplateMixin, TestSuite):
         self.log_name = f"{log_file_name or report_file_name or random_name}.log"
         self.path_file = os.path.join(dir_to, report_name)
         self.log_file_name = os.path.join(dir_to, self.log_name)
-        log.set_log_path(self.log_file_name)
-        log.set_log_by_thread_log(True)
-        log.set_log_level(Logger.LOG_LEVEL_NOTSET)
-        self.main_logger = Logger.GeneralLogger().get_logger()
+        GeneralLogger().set_log_path(self.log_file_name)
+        GeneralLogger().set_log_by_thread_log(True)
+        GeneralLogger().set_log_level(logger.LOG_LEVEL_NOTSET)
+        self.main_logger = logger.GeneralLogger().get_logger()
 
         self.startTime = datetime.datetime.now()
         self.stopTime = datetime.datetime.now()

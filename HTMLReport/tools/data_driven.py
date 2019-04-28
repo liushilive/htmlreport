@@ -109,9 +109,9 @@ def _add_test(cls, test_name, func, *args, **kwargs):
     测试将基于现有的功能，但会给它一个新名称。
     """
     setattr(cls, test_name, _feed_data(func, test_name, *args, **kwargs))
-    if hasattr(func, retry_on_exception._retry):
+    if hasattr(func, retry_on_exception.__retry):
         retry_on_exception.retry_lists.append(cls.__name__ + '.' + test_name)
-    if hasattr(func, retry_on_exception._no_retry):
+    if hasattr(func, retry_on_exception.__no_retry):
         retry_on_exception.no_retry_lists.append(cls.__name__ + '.' + test_name)
 
 

@@ -15,28 +15,19 @@ under the License.
 
 测试报告生成器
 """
-import warnings
-
-from .tools import data_driven
-from .tools.log.Logger import GeneralLogger
-from .tools.SaveImages import addImage
-from .tools.retry_on_exception import retry, no_retry
-from .HTMLReport import TestRunner
-
 __author__ = '刘士'
 __version__ = '2.0.0'
 
+import warnings
+
+from .tools import data_driven as ddt
+from .tools.log.logger import Log
+from .tools.save_images import addImage
+from .tools.retry_on_exception import retry, no_retry
+from HTMLReport.test_runner import TestRunner
+
 # 日志记录器
-log = GeneralLogger().get_logger()
-ddt = data_driven
-
-
-# from .HTMLReport import TestRunner
-# from .images.SaveImages import addImage
-# from .log.Logger import GeneralLogger
-
-# 日志记录器
-# logger = GeneralLogger().get_log
+log = Log()
 
 
 def logger():
@@ -54,7 +45,7 @@ def logger():
     log.info("")
     """, DeprecationWarning, stacklevel=2)
 
-    return GeneralLogger().get_logger
+    return tools.log.logger.GeneralLogger().get_logger()
 
 
 def AddImage(base64_data: bytes, title: str = "", describe: str = ""):

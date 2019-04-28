@@ -11,7 +11,6 @@ from setuptools import setup
 
 from HTMLReport import __version__, __author__
 
-
 setup(
     name='HTMLReport',
     version=__version__,
@@ -25,7 +24,7 @@ setup(
         'The report template': 'https://liushilive.github.io/report/report/#en',
         '报告样板': 'https://liushilive.github.io/report/report/#cn'
     },
-    packages=find_packages(),
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_dir={'HTMLReport': 'HTMLReport'},
     include_package_data=True,
     license="Apache 2.0",
@@ -44,6 +43,5 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy'
-    ],
-    test_suite='tests'
+    ]
 )

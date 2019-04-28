@@ -19,7 +19,7 @@ import random
 import threading
 import time
 
-from .log.Logger import GeneralLogger
+from .log.logger import GeneralLogger
 
 report_path = ""
 imageList = {}

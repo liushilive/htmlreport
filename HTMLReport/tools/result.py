@@ -18,9 +18,9 @@ import time
 from io import StringIO
 from unittest import TestResult
 
-from . import SaveImages
-from .log.HandlerFactory import HandlerFactory
-from .log.Logger import GeneralLogger
+from . import save_images
+from .log.handler_factory import HandlerFactory
+from .log.logger import GeneralLogger
 from .retry_on_exception import retry_lists, no_retry_lists
 
 
@@ -30,9 +30,8 @@ class Result(TestResult):
     这里重写了 unittest.TestResult 的多个方法，比如 startTest(self, test) 等等
     """
 
-    def __init__(self, LANG, tries, delay, back_off, max_delay, retry, verbosity=2):
-        # TestResult.__init__(self, verbosity=verbosity)
-        # super().__init__(verbosity=verbosity)
+    def __init__(self, LANG, tries, delay, back_off, max_delay, retry):
+        super().__init__()
         self.success_count = 0
         self.failure_count = 0
         self.skip_count = 0
