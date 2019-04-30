@@ -52,14 +52,15 @@ def _isnotsuite(test):
 def quert_version():
     try:
         global msg
-        r = request.urlopen('https://pypi.org/pypi/htmlreport/json', timeout=2)
-        version = json.loads(r.read().decode('utf-8')).get("info").get("version")
-        for x, y in zip(version.split("."), __version__.split(".")):
-            if int(x) < int(y):
-                break
-            elif int(x) == int(y):
-                continue
-            msg = f"\n当前版本：{__version__}\t已发布最新版本：{version}\n请使用命令\t'pip install -U lsbook'\t升级"
+        if __version__[-1] != "a":
+            r = request.urlopen('https://pypi.org/pypi/htmlreport/json', timeout=2)
+            version = json.loads(r.read().decode('utf-8')).get("info").get("version")
+            for x, y in zip(version.split("."), __version__.split(".")):
+                if int(x) < int(y):
+                    break
+                elif int(x) == int(y):
+                    continue
+                msg = f"\n当前版本：{__version__}\t已发布最新版本：{version}\n请使用命令\t'pip install -U lsbook'\t升级"
     except:
         pass
 
@@ -309,7 +310,6 @@ class TestRunner(TemplateMixin, TestSuite):
                     ne += 1
                 elif n == 3:
                     ns += 1
-                # nr += r != 0 and r + 1
                 nr += r
             nrs += nr
 
