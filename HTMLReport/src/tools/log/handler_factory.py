@@ -15,29 +15,70 @@ under the License.
 """
 import logging
 import logging.handlers
-
 import sys
 import threading
-
 from io import StringIO
+from logging import Handler, getLevelName
 
-LOG_LEVEL_NOTSET = logging.NOTSET
-LOG_LEVEL_DEBUG = logging.DEBUG
-LOG_LEVEL_INFO = logging.INFO
-LOG_LEVEL_WARNING = logging.WARNING
-LOG_LEVEL_ERROR = logging.ERROR
+_LOGGER_FORMAT = "%(asctime)s %(thread)7d %(levelname)8s %(filename)s(%(lineno)d) - %(message)s"
 
-# logger target
-LOG_TARGET_CONSOLE = 0x1
-LOG_TARGET_LOG_FILE = 0x10
-LOG_TARGET_LOG_HTTP = 0x100
 
-_LOGGER_FORMAT = "%(asctime)s [%(thread)7d] %(levelname)s %(filename)s(%(lineno)d) - %(message)s"
+class _StreamHandler(Handler):
+    """
+    分线程日志流记录
+    """
+
+    terminator = '\n'
+
+    def __init__(self, streams=None):
+        """
+        初始化处理程序
+        """
+        Handler.__init__(self)
+        if streams is None:
+            streams = {}
+        self.streams = streams
+
+    def flush(self):
+        """
+        刷新流
+        """
+        self.acquire()
+        steam_id = str(threading.current_thread().ident)
+        try:
+            if self.streams.get(steam_id) and hasattr(self.streams[steam_id], "flush"):
+                self.streams[steam_id].flush()
+        finally:
+            self.release()
+
+    def emit(self, record):
+        """
+        记录
+        """
+        try:
+            msg = self.format(record)
+            steam_id = str(threading.current_thread().ident)
+            if steam_id not in self.streams:
+                self.streams[steam_id] = StringIO()
+            stream = self.streams[steam_id]
+            # issue 35046: merged two stream.writes into one.
+            stream.write(msg + self.terminator)
+            self.flush()
+        except Exception:
+            self.handleError(record)
+
+    def __repr__(self):
+        level = getLevelName(self.level)
+        steam_id = str(threading.current_thread().ident)
+        name = getattr(self.streams[steam_id], 'name', '')
+        if name:
+            name += ' '
+        return f'<{self.__class__.__name__} {name}({level})>'
 
 
 class InfoOrLessCritical(logging.Filter):
     def filter(self, record):
-        return record.levelno < LOG_LEVEL_WARNING
+        return record.levelno < logging.WARNING
 
 
 class HandlerFactory(object):
@@ -59,7 +100,7 @@ class HandlerFactory(object):
         if 'std_err_handler' not in cls.handlers:
             std_err_handler = logging.StreamHandler(sys.stderr)
             std_err_handler.setFormatter(logging.Formatter(_LOGGER_FORMAT))
-            std_err_handler.setLevel(LOG_LEVEL_WARNING)
+            std_err_handler.setLevel(logging.WARNING)
             cls.handlers['std_err_handler'] = std_err_handler
 
         return cls.handlers['std_err_handler']
@@ -72,7 +113,7 @@ class HandlerFactory(object):
         if log_path not in cls.handlers['rotating_file_handler']:
             rotating_file_handler = logging.handlers.RotatingFileHandler(
                 log_path, 'a', max_bytes, backup_count, encoding='utf8')
-            rotating_file_handler.setLevel(LOG_LEVEL_NOTSET)
+            rotating_file_handler.setLevel(logging.NOTSET)
             rotating_file_handler.setFormatter(logging.Formatter(_LOGGER_FORMAT))
             cls.handlers['rotating_file_handler'][log_path] = rotating_file_handler
 
@@ -81,17 +122,11 @@ class HandlerFactory(object):
     @classmethod
     def get_stream_handler(cls):
         if 'rotating_stream_handler' not in cls.handlers:
-            cls.handlers['rotating_stream_handler'] = {}
-        steam_id = str(threading.current_thread().ident)
-        if steam_id not in cls.handlers['rotating_stream_handler']:
-            steam = StringIO()
-            cls.streams[steam_id] = steam
-            rotating_stream_handler = logging.StreamHandler(cls.streams[steam_id])
-            rotating_stream_handler.set_name(steam_id)
+            rotating_stream_handler = _StreamHandler(cls.streams)
             rotating_stream_handler.setFormatter(logging.Formatter(_LOGGER_FORMAT))
-            cls.handlers['rotating_stream_handler'][steam_id] = rotating_stream_handler
+            cls.handlers['rotating_stream_handler'] = rotating_stream_handler
 
-        return cls.handlers['rotating_stream_handler'][steam_id]
+        return cls.handlers['rotating_stream_handler']
 
     @classmethod
     def get_stream_value(cls):

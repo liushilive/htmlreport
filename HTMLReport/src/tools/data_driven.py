@@ -93,12 +93,12 @@ def _feed_data(func, new_name, *args, **kwargs):
     wrapper.__name__ = new_name
     wrapper.__wrapped__ = func
     # 试着调用docstring上的格式
-    if func.__doc__:
-        try:
-            wrapper.__doc__ = func.__doc__.format(*args, **kwargs)
-        except (IndexError, KeyError):
-            # 也许用户已经添加了一些格式化字符串
-            pass
+    # if func.__doc__:
+    #     try:
+    #         wrapper.__doc__ = func.__doc__.strip().format(*args, **kwargs)
+    #     except (IndexError, KeyError):
+    #         # 也许用户已经添加了一些格式化字符串
+    #         pass
     return wrapper
 
 

@@ -14,12 +14,11 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 import base64
+import logging
 import os
 import random
 import threading
 import time
-
-from .log.logger import GeneralLogger
 
 report_path = ""
 imageList = {}
@@ -51,4 +50,4 @@ def addImage(base64_data: bytes, title: str = "", describe: str = ""):
                 f.write(base64.b64decode(base64_data))
                 imageList[current_id].append((os.path.join('images', random_name).replace("\\", "/"), describe, title))
     except Exception as e:
-        GeneralLogger().get_logger().error(e)
+        logging.error(e)

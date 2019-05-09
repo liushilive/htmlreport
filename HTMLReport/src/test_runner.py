@@ -15,6 +15,7 @@ under the License.
 """
 import datetime
 import json
+import logging
 import os
 import queue
 import random
@@ -25,13 +26,11 @@ from unittest.suite import TestSuite
 from urllib import request
 from xml.sax import saxutils
 
-from .tools.log.logger import GeneralLogger
-
-from . import __author__, __version__
+from HTMLReport import __author__, __version__
+from .tools import save_images
+from .tools.log.handler_factory import HandlerFactory
 from .tools.result import Result
 from .tools.template import TemplateMixin
-from .tools import save_images
-from .tools.log import logger
 
 msg = None
 
@@ -61,7 +60,7 @@ def quert_version():
                 elif int(x) == int(y):
                     continue
                 msg = f"\n当前版本：{__version__}\t已发布最新版本：{version}\n请使用命令\t'pip install -U lsbook'\t升级"
-    except:
+    except Exception:
         pass
 
 
@@ -114,10 +113,12 @@ class TestRunner(TemplateMixin, TestSuite):
         self.log_name = f"{log_file_name or report_file_name or random_name}.log"
         self.path_file = os.path.join(dir_to, report_name)
         self.log_file_name = os.path.join(dir_to, self.log_name)
-        GeneralLogger().set_log_path(self.log_file_name)
-        GeneralLogger().set_log_by_thread_log(True)
-        GeneralLogger().set_log_level(logger.LOG_LEVEL_NOTSET)
-        self.main_logger = logger.GeneralLogger().get_logger()
+
+        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger().addHandler(HandlerFactory.get_std_out_handler())
+        logging.getLogger().addHandler(HandlerFactory.get_std_err_handler())
+        logging.getLogger().addHandler(HandlerFactory.get_stream_handler())
+        logging.getLogger().addHandler(HandlerFactory.get_rotating_file_handler(self.log_file_name))
 
         self.startTime = datetime.datetime.now()
         self.stopTime = datetime.datetime.now()
@@ -165,16 +166,19 @@ class TestRunner(TemplateMixin, TestSuite):
         运行给定的测试用例或测试套件。
 
         :param test: 测试用例或套件
-        :param debug: 调试模式下不会产生测试报告文件，但会产生日志文件
+        :param debug: 调试模式
         """
+        if debug:
+            logging.getLogger().setLevel(logging.DEBUG)
+
         th = Thread(target=quert_version)
         th.start()
 
         result = Result(self.LANG, self.tries, self.delay, self.back_off, self.max_delay, self.retry)
         if self.LANG == "cn":
-            self.main_logger.info("预计并发线程数：" + str(self.thread_count))
+            logging.info("预计并发线程数：" + str(self.thread_count))
         else:
-            self.main_logger.info("The number of concurrent threads is expected to be " + str(self.thread_count))
+            logging.info("The number of concurrent threads is expected to be " + str(self.thread_count))
 
         if self.sequential_execution:
             # 执行套件添加顺序
@@ -202,9 +206,9 @@ class TestRunner(TemplateMixin, TestSuite):
 
         self.stopTime = datetime.datetime.now()
         if result.stdout_steams.getvalue().strip():
-            self.main_logger.info(result.stdout_steams.getvalue())
+            logging.info(result.stdout_steams.getvalue())
         if result.stderr_steams.getvalue().strip():
-            self.main_logger.error(result.stderr_steams.getvalue())
+            logging.error(result.stderr_steams.getvalue())
 
         if self.LANG == "cn":
             s = '\n测试结束！\n运行时间: {time}\n共计执行用例数量：{count}\n执行成功用例数量：{Pass}' \
@@ -221,12 +225,11 @@ class TestRunner(TemplateMixin, TestSuite):
             skip=result.skip_count,
             error=result.error_count
         )
-        if not debug:
-            self._generateReport(result)
-        self.main_logger.info(s)
+        self._generateReport(result)
+        logging.info(s)
         th.join()
         if msg:
-            self.main_logger.warning(msg)
+            logging.warning(msg)
         return result
 
     @staticmethod
@@ -318,7 +321,7 @@ class TestRunner(TemplateMixin, TestSuite):
                 name = cls.__name__
             else:
                 name = "{}.{}".format(cls.__module__, cls.__name__)
-            doc = cls.__doc__ and cls.__doc__.split("\n")[0] or ""
+            doc = cls.__doc__ and cls.__doc__.strip().split("\n")[0] or ""
             desc = doc and '{}: {}'.format(name, doc) or name
             count = np + nf + ne + ns
             row = self.REPORT_CLASS_TMPL.format(
@@ -355,7 +358,7 @@ class TestRunner(TemplateMixin, TestSuite):
         # 0: success; 1: fail; 2: error; 3: skip
         tid = (n == 0 and 'p' or n == 3 and 's' or n == 2 and 'e' or 'f') + 't{}.{}'.format(cid + 1, tid + 1)
         name = t.id().split('.')[-1]
-        doc = t.shortDescription() or ""
+        doc = t._testMethodDoc and t._testMethodDoc.strip().split("\n")[0] or ""
         desc = doc and ('{}: {}'.format(name, doc)) or name
 
         row = self.REPORT_TEST_WITH_OUTPUT_TMPL.format(

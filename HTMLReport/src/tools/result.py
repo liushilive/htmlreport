@@ -13,6 +13,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 """
+import logging
 import threading
 import time
 from io import StringIO
@@ -20,7 +21,6 @@ from unittest import TestResult
 
 from . import save_images
 from .log.handler_factory import HandlerFactory
-from .log.logger import GeneralLogger
 from .retry_on_exception import retry_lists, no_retry_lists
 
 
@@ -62,8 +62,7 @@ class Result(TestResult):
         self.time = {}
 
     def startTest(self, test):
-        GeneralLogger().get_logger(True)
-        GeneralLogger().get_logger().info((self.LANG == 'cn' and "开始测试： {}" or "Start Test: {}").format(test))
+        logging.info((self.LANG == 'cn' and "开始测试： {}" or "Start Test: {}").format(test))
         current_id = str(threading.current_thread().ident)
         if current_id in self.result_tmp:
             self.result_tmp[current_id]['tries'] += 1
@@ -83,8 +82,8 @@ class Result(TestResult):
 
     def stopTest(self, test):
         end_time = time.time()
-        GeneralLogger().get_logger().info((self.LANG == 'cn' and "测试结束： {}" or "Stop Test: {}").format(test))
-        GeneralLogger().get_logger().info((self.LANG == 'cn' and "耗时： {}" or "Duration: {}").format(
+        logging.info((self.LANG == 'cn' and "测试结束： {}" or "Stop Test: {}").format(test))
+        logging.info((self.LANG == 'cn' and "耗时： {}" or "Duration: {}").format(
             end_time - self.time[str(threading.current_thread().ident)]))
         current_id = str(threading.current_thread().ident)
         tries = self.result_tmp[current_id]['tries']
@@ -105,9 +104,8 @@ class Result(TestResult):
             # 重试
             if self.result_tmp[current_id]['local_delay'] > self.max_delay:
                 self.result_tmp[current_id]['local_delay'] = self.max_delay
-            GeneralLogger().get_logger().info(
-                (self.LANG == 'cn' and "等待 {} 秒后重试" or "Retrying in {} seconds...").format(
-                    self.result_tmp[current_id]['local_delay']))
+            logging.info((self.LANG == 'cn' and "等待 {} 秒后重试" or "Retrying in {} seconds...").format(
+                self.result_tmp[current_id]['local_delay']))
             time.sleep(self.result_tmp[current_id]['local_delay'])
             self.result_tmp[current_id]['local_delay'] *= self.back_off
             test(self)
@@ -132,14 +130,13 @@ class Result(TestResult):
         TestResult.addSkip(self, test, reason)
         self.stderr_steams.write('Skip\t')
         self.stderr_steams.write(str(test))
-        doc = test._testMethodDoc
+        doc = test._testMethodDoc or ""
         if doc:
             self.stderr_steams.write("\t")
-            self.stderr_steams.write(doc)
+            self.stderr_steams.write(doc.strip().split("\n")[0])
         self.stderr_steams.write("\n")
 
-        GeneralLogger().get_logger().info(
-            (self.LANG == 'cn' and "跳过测试： {}\n{}" or "Skip Test: {}\n{}").format(test, reason))
+        logging.info((self.LANG == 'cn' and "跳过测试： {}\n{}" or "Skip Test: {}\n{}").format(test, reason))
 
         current_id = str(threading.current_thread().ident)
         self.result_tmp[current_id]["result_code"] = 3
@@ -155,9 +152,9 @@ class Result(TestResult):
         doc = test._testMethodDoc
         if doc:
             self.stdout_steams.write("\t")
-            self.stdout_steams.write(doc)
+            self.stdout_steams.write(doc.strip().split("\n")[0])
         self.stdout_steams.write('\n')
-        GeneralLogger().get_logger().info((self.LANG == 'cn' and "测试执行通过： {}" or "Pass Test: {}").format(test))
+        logging.info((self.LANG == 'cn' and "测试执行通过： {}" or "Pass Test: {}").format(test))
 
         current_id = str(threading.current_thread().ident)
         self.result_tmp[current_id]["result_code"] = 0
@@ -178,10 +175,9 @@ class Result(TestResult):
         doc = test._testMethodDoc
         if doc:
             self.stderr_steams.write("\t")
-            self.stderr_steams.write(doc)
+            self.stderr_steams.write(doc.strip().split("\n")[0])
         self.stderr_steams.write('\n')
-        GeneralLogger().get_logger().error(
-            (self.LANG == 'cn' and "测试产生错误： {}\n{}" or "Error Test: {}\n{}").format(test, _exc_str))
+        logging.error((self.LANG == 'cn' and "测试产生错误： {}\n{}" or "Error Test: {}\n{}").format(test, _exc_str))
 
         current_id = str(threading.current_thread().ident)
         self.result_tmp[current_id]["result_code"] = 2
@@ -198,10 +194,9 @@ class Result(TestResult):
         doc = test._testMethodDoc
         if doc:
             self.stderr_steams.write("\t")
-            self.stderr_steams.write(doc)
+            self.stderr_steams.write(doc.strip().split("\n")[0])
         self.stderr_steams.write('\n')
-        GeneralLogger().get_logger().warning(
-            (self.LANG == "cn" and "测试未通过： {}\n{}" or "Failure: {}\n{}").format(test, _exc_str))
+        logging.warning((self.LANG == "cn" and "测试未通过： {}\n{}" or "Failure: {}\n{}").format(test, _exc_str))
 
         current_id = str(threading.current_thread().ident)
         self.result_tmp[current_id]["result_code"] = 1
