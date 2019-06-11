@@ -24,4 +24,12 @@ from .src.tools import data_driven as ddt
 from .src.tools.retry_on_exception import retry, no_retry
 from .src.tools.save_images import addImage
 
-__all__ = ["addImage", "TestRunner", "ddt", "retry", "no_retry"]
+__all__ = [
+    "addImage",
+    "TestRunner",
+    "ddt",
+    "retry",
+    "no_retry",
+    "__author__",
+    "__version__"
+]

@@ -14,16 +14,13 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 import datetime
-import json
 import logging
 import os
 import queue
 import random
 import time
 from concurrent.futures import ThreadPoolExecutor
-from threading import Thread
 from unittest.suite import TestSuite
-from urllib import request
 from xml.sax import saxutils
 
 from HTMLReport import __author__, __version__
@@ -46,22 +43,6 @@ def _isnotsuite(test):
     except TypeError:
         return True
     return False
-
-
-def quert_version():
-    try:
-        global msg
-        if __version__[-1] != "a":
-            r = request.urlopen('https://pypi.org/pypi/htmlreport/json', timeout=2)
-            version = json.loads(r.read().decode('utf-8')).get("info").get("version")
-            for x, y in zip(version.split("."), __version__.split(".")):
-                if int(x) < int(y):
-                    break
-                elif int(x) == int(y):
-                    continue
-                msg = f"\n当前版本：{__version__}\t已发布最新版本：{version}\n请使用命令\t'pip install -U lsbook'\t升级"
-    except Exception:
-        pass
 
 
 class TestRunner(TemplateMixin, TestSuite):
@@ -171,9 +152,6 @@ class TestRunner(TemplateMixin, TestSuite):
         if debug:
             logging.getLogger().setLevel(logging.DEBUG)
 
-        th = Thread(target=quert_version)
-        th.start()
-
         result = Result(self.LANG, self.tries, self.delay, self.back_off, self.max_delay, self.retry)
         if self.LANG == "cn":
             logging.info("预计并发线程数：" + str(self.thread_count))
@@ -227,9 +205,6 @@ class TestRunner(TemplateMixin, TestSuite):
         )
         self._generateReport(result)
         logging.info(s)
-        th.join()
-        if msg:
-            logging.warning(msg)
         return result
 
     @staticmethod
