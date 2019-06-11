@@ -213,9 +213,7 @@ with open("baidu.png", 'rb') as f:
 
 测试方法前加入装饰器 `@ddt.data(*data)`
 
->
-
-如果您有其他的需求，请发邮件给我：<liushilive@outlook.com> ， 祝您使用愉快！
+>如果您有其他的需求，请发邮件给我：<liushilive@outlook.com> ， 祝您使用愉快！
 
 Links:
 

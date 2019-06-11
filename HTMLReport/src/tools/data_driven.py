@@ -12,14 +12,15 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
+
+本页代码改写：https://github.com/datadriventests/ddt
+
+在其基础上进行改写以符合个性化需求。
 """
+import re
 from functools import wraps
 
 from . import retry_on_exception
-
-# 参考https://github.com/datadriventests/ddt
-# 这些属性不会与任何真正的python属性发生冲突
-# 它们被添加到修饰过的测试方法中，并在稍后由“ddt”类装饰器处理。
 
 _DATA_ATTR = '%values'  # 存储测试必须运行的数据
 _UNPACK_ATTR = '%unpack'  # 解包
@@ -46,21 +47,27 @@ def unpack(func):
 
 def data(*values):
     """
-    方法修饰符添加到测试方法中
+    方法装饰器添加到 unittest.TestCase 实例的方法中
 
-    可以添加到 unittest.TestCase 实例的方法中
+    接收位置参数，构成数据驱动
     """
     global _index_len
     _index_len = len(str(len(values)))
+    return idata(values)
 
-    def _data(iterable):
-        def wrapper(func):
-            setattr(func, _DATA_ATTR, iterable)
-            return func
 
-        return wrapper
+def idata(iterable):
+    """
+    方法装饰器添加到 unittest.TestCase 实例的方法中
 
-    return _data(values)
+    接收可迭代对象，构成数据驱动
+    """
+
+    def wrapper(func):
+        setattr(func, _DATA_ATTR, iterable)
+        return func
+
+    return wrapper
 
 
 def _mk_test_name(name, value, index=0):
@@ -74,13 +81,17 @@ def _mk_test_name(name, value, index=0):
     index = "{0:0{1}}".format(index + 1, _index_len)
     if not _is_trivial(value):
         return "{0}_{1}".format(name, index)
-    value = str(value)
+    try:
+        value = str(value)
+    except UnicodeEncodeError:
+        # fallback for python2
+        value = value.encode('ascii', 'backslashreplace')
     test_name = "{0}_{1}_{2}".format(name, index, value)
-    # return re.sub(r'\W|^(?=\d)', '_', test_name)
-    return test_name
+    return re.sub(r'\W|^(?=\d)', '_', test_name)
+    # return test_name
 
 
-def _feed_data(func, new_name, *args, **kwargs):
+def _feed_data(func, new_name, test_data_docstring, *args, **kwargs):
     """
     这个内部方法装饰器将测试数据项提供给测试
 
@@ -92,27 +103,51 @@ def _feed_data(func, new_name, *args, **kwargs):
 
     wrapper.__name__ = new_name
     wrapper.__wrapped__ = func
-    # 试着调用docstring上的格式
-    # if func.__doc__:
-    #     try:
-    #         wrapper.__doc__ = func.__doc__.strip().format(*args, **kwargs)
-    #     except (IndexError, KeyError):
-    #         # 也许用户已经添加了一些格式化字符串
-    #         pass
+    if test_data_docstring is not None:
+        wrapper.__doc__ = test_data_docstring
+    else:
+        # 试着调用 docstring 上的格式
+        if func.__doc__:
+            try:
+                wrapper.__doc__ = func.__doc__.strip().format(*args, **kwargs)
+            except (IndexError, KeyError):
+                # 也许用户已经添加了一些格式化字符串
+                pass
     return wrapper
 
 
-def _add_test(cls, test_name, func, *args, **kwargs):
+def _add_test(cls, test_name, test_docstring, func, *args, **kwargs):
     """
     向该类添加一个测试用例
 
     测试将基于现有的功能，但会给它一个新名称。
     """
-    setattr(cls, test_name, _feed_data(func, test_name, *args, **kwargs))
+    setattr(cls, test_name, _feed_data(func, test_name, test_docstring, *args, **kwargs))
+    # 测试重试
     if hasattr(func, retry_on_exception.__retry):
         retry_on_exception.retry_lists.append(cls.__name__ + '.' + test_name)
     if hasattr(func, retry_on_exception.__no_retry):
         retry_on_exception.no_retry_lists.append(cls.__name__ + '.' + test_name)
+
+
+def _is_primitive(obj):
+    """
+    找出 obj 是否是“primitive”。这有点老套，但确实有效。
+    """
+    return not hasattr(obj, '__dict__')
+
+
+def _get_test_data_docstring(func, value):
+    """根据下面的解析策略返回一个文档字符串:
+
+    1. 传递的值不是“primitive”，并且有一个 docstring，使用它。
+
+    2. 其他情况返回 None
+    """
+    if not _is_primitive(value) and value.__doc__:
+        return value.__doc__
+    else:
+        return None
 
 
 def ddt(cls):
@@ -133,15 +168,18 @@ def ddt(cls):
         if hasattr(func, _DATA_ATTR):
             for i, v in enumerate(getattr(func, _DATA_ATTR)):
                 test_name = _mk_test_name(name, getattr(v, "__name__", v), i)
+                test_data_docstring = _get_test_data_docstring(func, v)
                 if hasattr(func, _UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
-                        _add_test(cls, test_name, func, *v)
+                        _add_test(cls, test_name, test_data_docstring, func, *v)
                     elif isinstance(v, dict):
                         # 解包字典
-                        _add_test(cls, test_name, func, **v)
+                        _add_test(cls, test_name, test_data_docstring, func, **v)
                 else:
-                    _add_test(cls, test_name, func, v)
+                    _add_test(cls, test_name, test_data_docstring, func, v)
             delattr(cls, name)
+
+            # 测试重试
             func.__qualname__ in retry_on_exception.retry_lists and retry_on_exception.retry_lists.remove(
                 func.__qualname__)
             func.__qualname__ in retry_on_exception.no_retry_lists and retry_on_exception.no_retry_lists.remove(
