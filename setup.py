@@ -5,11 +5,10 @@ import sys
 if sys.version_info < (3, 7):
     print(u"The minimum support Python 3.7\n支持最低版本 3.7")
     exit(1)
-
-from setuptools import find_packages
-from setuptools import setup
-
-from HTMLReport import __version__, __author__
+else:
+    from setuptools import find_packages
+    from setuptools import setup
+    from HTMLReport import __version__, __author__
 
 setup(
     name='HTMLReport',
