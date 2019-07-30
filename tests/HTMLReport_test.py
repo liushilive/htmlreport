@@ -130,9 +130,11 @@ class TS_3(unittest.TestCase):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
+    suite_sub = unittest.TestSuite()
     loader = unittest.TestLoader()
-    suite.addTests(loader.loadTestsFromTestCase(TS_1))
-    suite.addTests(loader.loadTestsFromTestCase(TS_2))
+    suite_sub.addTests(loader.loadTestsFromTestCase(TS_1))
+    suite_sub.addTests(loader.loadTestsFromTestCase(TS_2))
+    suite.addTests(suite_sub)
     suite.addTests(loader.loadTestsFromTestCase(TS_3))
 
     TestRunner(
@@ -143,6 +145,8 @@ if __name__ == '__main__':
         thread_count=10,
         thread_start_wait=0,
         tries=5,
+        delay=1,
+        back_off=2,
         retry=False,
         sequential_execution=True,
         lang='cn'

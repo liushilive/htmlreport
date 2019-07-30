@@ -50,4 +50,4 @@ def addImage(base64_data: bytes, title: str = "", describe: str = ""):
                 f.write(base64.b64decode(base64_data))
                 imageList[current_id].append((os.path.join('images', random_name).replace("\\", "/"), describe, title))
     except Exception as e:
-        logging.error(e)
+        logging.error(f"保存截图失败\n{e}")
