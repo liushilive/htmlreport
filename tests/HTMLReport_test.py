@@ -27,6 +27,7 @@ class TS_1(unittest.TestCase):
     def test_false(self):
         """
         测试失败
+
         :return:
         """
         self.assertTrue(False)
@@ -34,6 +35,7 @@ class TS_1(unittest.TestCase):
     def test_error(self):
         """
         测试异常
+
         :return:
         """
         self.assertTrue(int("5.2"))
@@ -42,6 +44,7 @@ class TS_1(unittest.TestCase):
     def test_skip(self):
         """
         测试跳过
+
         :return:
         """
         self.assertTrue(int("5.2"))
@@ -49,6 +52,7 @@ class TS_1(unittest.TestCase):
     def test_skip_(self):
         """
         测试中途跳过
+
         :return:
         """
         logging.info("准备跳过")
@@ -84,6 +88,7 @@ class TS_2(unittest.TestCase):
     def test_a(self, n):
         """
         数据驱动
+
         :param n:
         :return:
         """
@@ -114,6 +119,7 @@ class TS_3(unittest.TestCase):
     def test_1(self):
         """
         测试 setUpClass
+
         :return:
         """
         self.__class__.n += 1
@@ -122,6 +128,7 @@ class TS_3(unittest.TestCase):
     def test_2(self):
         """
         测试 setUpClass
+
         :return:
         """
         self.__class__.n += 1

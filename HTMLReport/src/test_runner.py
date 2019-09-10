@@ -29,8 +29,6 @@ from .tools.log.handler_factory import HandlerFactory
 from .tools.result import Result
 from .tools.template import TemplateMixin
 
-msg = None
-
 
 def _isnotsuite(test):
     """A crude way to tell apart testcases and suites with duck-typing
@@ -46,9 +44,7 @@ def _isnotsuite(test):
 
 
 class TestRunner(TemplateMixin, TestSuite):
-    """
-    测试执行器
-    """
+    """测试执行器"""
 
     def __init__(self, report_file_name: str = None, log_file_name: str = None, output_path: str = None,
                  title: str = None, description: str = None, tries: int = 0, delay: int = 1, back_off: int = 1,
@@ -142,7 +138,7 @@ class TestRunner(TemplateMixin, TestSuite):
         self._tearDownPreviousClass(None, result)
         self._handleModuleTearDown(result)
 
-    def run(self, test, debug=False):
+    def run(self, test: TestSuite, debug: bool = False):
         """
         运行给定的测试用例或测试套件。
 
@@ -205,7 +201,6 @@ class TestRunner(TemplateMixin, TestSuite):
         )
         self._generateReport(result)
         logging.info(s)
-        return result
 
     @staticmethod
     def _sortResult(result_list):
@@ -333,7 +328,8 @@ class TestRunner(TemplateMixin, TestSuite):
         # 0: success; 1: fail; 2: error; 3: skip
         tid = (n == 0 and 'p' or n == 3 and 's' or n == 2 and 'e' or 'f') + 't{}.{}'.format(cid + 1, tid + 1)
         name = t.id().split('.')[-1]
-        doc = t._testMethodDoc and t._testMethodDoc.strip().split("\n")[0] or ""
+        doc = "_testMethodDoc" in t.__dir__() and t.__getattribute__("_testMethodDoc") or ""
+        doc = doc.strip().split("\n")[0]
         desc = doc and ('{}: {}'.format(name, doc)) or name
 
         row = self.REPORT_TEST_WITH_OUTPUT_TMPL.format(
@@ -350,10 +346,10 @@ class TestRunner(TemplateMixin, TestSuite):
         rows.append(row)
 
         for x in range(0, r + 1):
-            imgs = ""
+            img_list = ""
             if i.get(x) is not None:
                 for img in i.get(x):
-                    imgs += self._generate_img(img)
+                    img_list += self._generate_img(img)
 
             script = self.REPORT_TEST_OUTPUT_TMPL.format(
                 id='{}.{}'.format(tid, x + 1),
@@ -363,7 +359,7 @@ class TestRunner(TemplateMixin, TestSuite):
                 row = self.REPORT_TEST_WITH_OUTPUT_SUB_TMPL.format(
                     tid=tid,
                     script=script,
-                    img=imgs,
+                    img=img_list,
                     r=x + 1,
                 )
                 rows.append(row)
@@ -383,7 +379,7 @@ class TestRunner(TemplateMixin, TestSuite):
                 row = self.REPORT_TEST_WITH_OUTPUT_SUB_TMPL.format(
                     tid=tid,
                     script=script,
-                    img=imgs,
+                    img=img_list,
                     r=x + 1
                 )
                 rows.append(row)

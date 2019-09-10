@@ -17,7 +17,7 @@ under the License.
 """
 
 __author__ = '刘士'
-__version__ = '2.0.3a'
+__version__ = '2.0.4a'
 
 from .src.test_runner import TestRunner
 from .src.tools import data_driven as ddt

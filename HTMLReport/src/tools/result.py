@@ -197,7 +197,7 @@ class Result(TestResult):
 
         steams.write(f'{result}\t')
         steams.write(str(test))
-        doc: str = "_testMethodDoc" in test.__dir__() and test.__getattribute__("_testMethodDoc") or None
+        doc = "_testMethodDoc" in test.__dir__() and test.__getattribute__("_testMethodDoc") or ""
         if doc:
             steams.write("\t")
             steams.write(doc.strip().split("\n")[0])
