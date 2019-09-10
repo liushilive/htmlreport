@@ -24,7 +24,7 @@ from . import retry_on_exception
 
 _DATA_ATTR = '%values'  # 存储测试必须运行的数据
 _UNPACK_ATTR = '%unpack'  # 解包
-_index_len = 5  # 默认最大的case索引长度
+_index_len = 1  # 默认最大的case索引长度
 
 trivial_types = (type(None), bool, int, float, str)
 
@@ -53,10 +53,10 @@ def data(*values):
     """
     global _index_len
     _index_len = len(str(len(values)))
-    return idata(values)
+    return iter_data(values)
 
 
-def idata(iterable):
+def iter_data(iterable):
     """
     方法装饰器添加到 unittest.TestCase 实例的方法中
 
@@ -84,14 +84,12 @@ def _mk_test_name(name, value, index=0):
     try:
         value = str(value)
     except UnicodeEncodeError:
-        # fallback for python2
         value = value.encode('ascii', 'backslashreplace')
     test_name = "{0}_{1}_{2}".format(name, index, value)
     return re.sub(r'\W|^(?=\d)', '_', test_name)
-    # return test_name
 
 
-def _feed_data(func, new_name, test_data_docstring, *args, **kwargs):
+def _feed_data(func, new_name, *args, **kwargs):
     """
     这个内部方法装饰器将测试数据项提供给测试
 
@@ -103,51 +101,22 @@ def _feed_data(func, new_name, test_data_docstring, *args, **kwargs):
 
     wrapper.__name__ = new_name
     wrapper.__wrapped__ = func
-    if test_data_docstring is not None:
-        wrapper.__doc__ = test_data_docstring
-    else:
-        # 试着调用 docstring 上的格式
-        if func.__doc__:
-            try:
-                wrapper.__doc__ = func.__doc__.strip().format(*args, **kwargs)
-            except (IndexError, KeyError):
-                # 也许用户已经添加了一些格式化字符串
-                pass
+
     return wrapper
 
 
-def _add_test(cls, test_name, test_docstring, func, *args, **kwargs):
+def _add_test(cls, test_name, func, *args, **kwargs):
     """
     向该类添加一个测试用例
 
     测试将基于现有的功能，但会给它一个新名称。
     """
-    setattr(cls, test_name, _feed_data(func, test_name, test_docstring, *args, **kwargs))
+    setattr(cls, test_name, _feed_data(func, test_name, *args, **kwargs))
     # 测试重试
     if hasattr(func, retry_on_exception.__retry):
         retry_on_exception.retry_lists.append(cls.__name__ + '.' + test_name)
     if hasattr(func, retry_on_exception.__no_retry):
         retry_on_exception.no_retry_lists.append(cls.__name__ + '.' + test_name)
-
-
-def _is_primitive(obj):
-    """
-    找出 obj 是否是“primitive”。这有点老套，但确实有效。
-    """
-    return not hasattr(obj, '__dict__')
-
-
-def _get_test_data_docstring(func, value):
-    """根据下面的解析策略返回一个文档字符串:
-
-    1. 传递的值不是“primitive”，并且有一个 docstring，使用它。
-
-    2. 其他情况返回 None
-    """
-    if not _is_primitive(value) and value.__doc__:
-        return value.__doc__
-    else:
-        return None
 
 
 def ddt(cls):
@@ -168,15 +137,14 @@ def ddt(cls):
         if hasattr(func, _DATA_ATTR):
             for i, v in enumerate(getattr(func, _DATA_ATTR)):
                 test_name = _mk_test_name(name, getattr(v, "__name__", v), i)
-                test_data_docstring = _get_test_data_docstring(func, v)
                 if hasattr(func, _UNPACK_ATTR):
                     if isinstance(v, tuple) or isinstance(v, list):
-                        _add_test(cls, test_name, test_data_docstring, func, *v)
+                        _add_test(cls, test_name, func, *v)
                     elif isinstance(v, dict):
                         # 解包字典
-                        _add_test(cls, test_name, test_data_docstring, func, **v)
+                        _add_test(cls, test_name, func, **v)
                 else:
-                    _add_test(cls, test_name, test_data_docstring, func, v)
+                    _add_test(cls, test_name, func, v)
             delattr(cls, name)
 
             # 测试重试
