@@ -17,7 +17,7 @@ import logging
 import threading
 import time
 from io import StringIO
-from unittest import TestResult
+from unittest import TestResult, TestCase
 
 from . import save_images
 from .log.handler_factory import HandlerFactory
@@ -96,7 +96,8 @@ class Result(TestResult):
         # 停止重试
         if self.tries <= tries or self.result_tmp[current_id]['result_code'] in (0, 3):
             self.result_tmp[current_id]['retry'] = False
-        test_name = test.__class__.__name__ + '.' + test._testMethodName
+        test_name = test.__class__.__name__ + '.' + "_testMethodName" in test.__dir__() and test.__getattribute__(
+            "_testMethodName") or ""
         if (not self.retry and test_name not in retry_lists) or test_name in no_retry_lists:
             self.result_tmp[current_id]['retry'] = False
 
@@ -128,13 +129,8 @@ class Result(TestResult):
 
     def addSkip(self, test, reason):
         TestResult.addSkip(self, test, reason)
-        self.stderr_steams.write('Skip\t')
-        self.stderr_steams.write(str(test))
-        doc = test._testMethodDoc or ""
-        if doc:
-            self.stderr_steams.write("\t")
-            self.stderr_steams.write(doc.strip().split("\n")[0])
-        self.stderr_steams.write("\n")
+
+        self._steams_write_doc("Skip", test)
 
         logging.info((self.LANG == 'cn' and "跳过测试： {}\n{}" or "Skip Test: {}\n{}").format(test, reason))
 
@@ -147,13 +143,9 @@ class Result(TestResult):
 
     def addSuccess(self, test):
         TestResult.addSuccess(self, test)
-        self.stdout_steams.write('Pass\t')
-        self.stdout_steams.write(str(test))
-        doc = test._testMethodDoc
-        if doc:
-            self.stdout_steams.write("\t")
-            self.stdout_steams.write(doc.strip().split("\n")[0])
-        self.stdout_steams.write('\n')
+
+        self._steams_write_doc("Pass", test)
+
         logging.info((self.LANG == 'cn' and "测试执行通过： {}" or "Pass Test: {}").format(test))
 
         current_id = str(threading.current_thread().ident)
@@ -170,13 +162,9 @@ class Result(TestResult):
     def addError(self, test, err):
         TestResult.addError(self, test, err)
         _, _exc_str = self.errors[-1]
-        self.stderr_steams.write('Error\t')
-        self.stderr_steams.write(str(test))
-        doc = test._testMethodDoc
-        if doc:
-            self.stderr_steams.write("\t")
-            self.stderr_steams.write(doc.strip().split("\n")[0])
-        self.stderr_steams.write('\n')
+
+        self._steams_write_doc("Error", test)
+
         logging.error((self.LANG == 'cn' and "测试产生错误： {}\n{}" or "Error Test: {}\n{}").format(test, _exc_str))
 
         current_id = str(threading.current_thread().ident)
@@ -189,13 +177,9 @@ class Result(TestResult):
     def addFailure(self, test, err):
         TestResult.addFailure(self, test, err)
         _, _exc_str = self.failures[-1]
-        self.stderr_steams.write('Fail\t')
-        self.stderr_steams.write(str(test))
-        doc = test._testMethodDoc
-        if doc:
-            self.stderr_steams.write("\t")
-            self.stderr_steams.write(doc.strip().split("\n")[0])
-        self.stderr_steams.write('\n')
+
+        self._steams_write_doc("Fail", test)
+
         logging.warning((self.LANG == "cn" and "测试未通过： {}\n{}" or "Failure: {}\n{}").format(test, _exc_str))
 
         current_id = str(threading.current_thread().ident)
@@ -204,3 +188,17 @@ class Result(TestResult):
         if current_id not in self.failure_set:
             self.failure_count += 1
             self.failure_set.add(current_id)
+
+    def _steams_write_doc(self, result: str, test: TestCase):
+        if result == "Pass":
+            steams = self.stdout_steams
+        else:
+            steams = self.stderr_steams
+
+        steams.write(f'{result}\t')
+        steams.write(str(test))
+        doc: str = "_testMethodDoc" in test.__dir__() and test.__getattribute__("_testMethodDoc") or None
+        if doc:
+            steams.write("\t")
+            steams.write(doc.strip().split("\n")[0])
+        steams.write('\n')
