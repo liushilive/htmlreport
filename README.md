@@ -202,15 +202,7 @@ class TS_3(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestSuite()
-    suite_sub = unittest.TestSuite()
-    loader = unittest.TestLoader()
-    suite_sub.addTests(loader.loadTestsFromTestCase(TS_1))
-    suite_sub.addTests(loader.loadTestsFromTestCase(TS_2))
-    suite.addTests(suite_sub)
-    suite.addTests(loader.loadTestsFromTestCase(TS_3))
-
-    TestRunner(
+    test_runner = TestRunner(
         report_file_name='index',
         output_path='report',
         title='一个简单的测试报告',
@@ -223,7 +215,16 @@ if __name__ == '__main__':
         retry=False,
         sequential_execution=True,
         lang='cn'
-    ).run(suite, debug=True)
+    )
+    suite = unittest.TestSuite()
+    suite_sub = unittest.TestSuite()
+    loader = unittest.TestLoader()
+    suite_sub.addTests(loader.loadTestsFromTestCase(TS_1))
+    suite_sub.addTests(loader.loadTestsFromTestCase(TS_2))
+    suite.addTests(suite_sub)
+    suite.addTests(loader.loadTestsFromTestCase(TS_3))
+
+    test_runner.run(suite, debug=True)
 
 ```
 
