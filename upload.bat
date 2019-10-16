@@ -6,4 +6,4 @@ pause
 
 rmdir /S /Q build
 rmdir /S /Q dist
-rmdir /S /Q LsBook.egg-info
+rmdir /S /Q HTMLReport.egg-info

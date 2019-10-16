@@ -20,7 +20,7 @@ import logging
 from .src.tools.log.handler_factory import HandlerFactory
 
 __author__ = '刘士'
-__version__ = '2.0.5a'
+__version__ = '2.0.6a'
 
 from .src.test_runner import TestRunner
 from .src.tools import data_driven as ddt
