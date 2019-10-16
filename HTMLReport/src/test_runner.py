@@ -91,10 +91,6 @@ class TestRunner(TemplateMixin, TestSuite):
         self.path_file = os.path.join(dir_to, report_name)
         self.log_file_name = os.path.join(dir_to, self.log_name)
 
-        logging.getLogger().setLevel(logging.INFO)
-        logging.getLogger().addHandler(HandlerFactory.get_std_out_handler())
-        logging.getLogger().addHandler(HandlerFactory.get_std_err_handler())
-        logging.getLogger().addHandler(HandlerFactory.get_stream_handler())
         logging.getLogger().addHandler(HandlerFactory.get_rotating_file_handler(self.log_file_name))
 
         self.startTime = datetime.datetime.now()

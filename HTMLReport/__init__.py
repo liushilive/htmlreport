@@ -15,14 +15,26 @@ under the License.
 
 测试报告生成器
 """
+import logging
+
+from .src.tools.log.handler_factory import HandlerFactory
 
 __author__ = '刘士'
-__version__ = '2.0.4a'
+__version__ = '2.0.5a'
 
 from .src.test_runner import TestRunner
 from .src.tools import data_driven as ddt
 from .src.tools.retry_on_exception import retry, no_retry
 from .src.tools.save_images import addImage
+
+for handler in logging.getLogger().handlers:
+    if not handler.get_name():
+        logging.getLogger().removeHandler(handler)
+
+logging.getLogger().setLevel(logging.INFO)
+logging.getLogger().addHandler(HandlerFactory.get_std_out_handler())
+logging.getLogger().addHandler(HandlerFactory.get_std_err_handler())
+logging.getLogger().addHandler(HandlerFactory.get_stream_handler())
 
 __all__ = [
     "addImage",
