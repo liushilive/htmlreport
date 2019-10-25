@@ -260,7 +260,7 @@ class TestRunner(TemplateMixin, TestSuite):
             fail=result.failure_count,
             error=result.error_count,
             skip=result.skip_count,
-            description=saxutils.escape(self.description),
+            description=saxutils.escape(self.description).replace("\n", "<br />"),
         )
         return heading
 
