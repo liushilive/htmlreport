@@ -204,19 +204,19 @@ class TestRunner(TemplateMixin, TestSuite):
         remap = {}
         classes = []
         for dic in result_list:
-            n = dic.get('result_code')
-            t = dic.get('testCase_object')
-            o = dic.get('test_output')
-            i = dic.get('image_paths')
-            r = dic.get('tries')
-            s = dic.get('style')
+            n = dic.get("result_code")
+            t = dic.get("testCase_object")
+            o = dic.get("test_output")
+            i = dic.get("image_paths")
+            r = dic.get("tries")
+            s = dic.get("style")
 
             cls = t.__class__
             if cls not in remap:
                 remap[cls] = []
                 classes.append(cls)
             remap[cls].append((n, t, o, i, r, s))
-            # remap[cls].append((n, t, o, i, r, s))
+
         r = [(cls, remap[cls]) for cls in classes]
         return r
 

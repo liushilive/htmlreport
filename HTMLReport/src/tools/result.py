@@ -21,7 +21,7 @@ from unittest import TestResult, TestCase
 
 from . import save_images
 from .log.handler_factory import HandlerFactory
-from .retry_on_exception import retry_lists, no_retry_lists
+from .retry_on_exception import no_retry_lists, retry_lists
 
 
 class Result(TestResult):
@@ -67,15 +67,16 @@ class Result(TestResult):
         if current_id in self.result_tmp:
             self.result_tmp[current_id]['tries'] += 1
         else:
-            self.result_tmp[current_id] = {'result_code': 0,
-                                           'testCase_object': test,
-                                           'test_output': {},
-                                           'image_paths': {},
-                                           'tries': 0,
-                                           'retry': True,
-                                           'style': {},
-                                           'local_delay': self.delay
-                                           }
+            self.result_tmp[current_id] = {
+                'result_code': 0,
+                'testCase_object': test,
+                'test_output': {},
+                'image_paths': {},
+                'tries': 0,
+                'retry': True,
+                'style': {},
+                'local_delay': self.delay
+            }
 
         self.time[str(threading.current_thread().ident)] = time.time()
         TestResult.startTest(self, test)
@@ -94,11 +95,10 @@ class Result(TestResult):
         self.result_tmp[current_id]['test_output'][tries] = tmp
 
         # 停止重试
-        if self.tries <= tries or self.result_tmp[current_id]['result_code'] in (0, 3):
-            self.result_tmp[current_id]['retry'] = False
-        test_name = test.__class__.__name__ + '.' + "_testMethodName" in test.__dir__() and test.__getattribute__(
-            "_testMethodName") or ""
-        if (not self.retry and test_name not in retry_lists) or test_name in no_retry_lists:
+        test_name = test.__class__.__name__ + '.' + test.__getattribute__("_testMethodName")
+        if (not self.retry and test_name not in retry_lists) or (
+                self.retry and test_name in no_retry_lists
+        ) or self.tries <= tries or self.result_tmp[current_id]['result_code'] in (0, 3):
             self.result_tmp[current_id]['retry'] = False
 
         if self.result_tmp[current_id]['retry']:

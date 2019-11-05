@@ -3,7 +3,7 @@ import logging
 import random
 import unittest
 
-from HTMLReport import ddt, retry, TestRunner, addImage
+from HTMLReport import ddt, retry, TestRunner, addImage, no_retry
 
 
 class TS_1(unittest.TestCase):
@@ -87,7 +87,7 @@ class TS_2(unittest.TestCase):
     @ddt.data(*range(1, 6))
     def test_a(self, n):
         """
-        数据驱动
+        重试
 
         :param n:
         :return:
@@ -95,7 +95,29 @@ class TS_2(unittest.TestCase):
         self.assertEqual(n, random.randint(1, 6))
 
 
+@ddt.ddt
 class TS_3(unittest.TestCase):
+    """第二组测试"""
+
+    def setUp(self) -> None:
+        logging.info("测试开始")
+
+    def tearDown(self) -> None:
+        logging.info("测试结束")
+
+    @no_retry
+    @ddt.data(*range(1, 6))
+    def test_a(self, n):
+        """
+        不重试
+
+        :param n:
+        :return:
+        """
+        self.assertEqual(n, random.randint(1, 6))
+
+
+class TS_4(unittest.TestCase):
     """
     第三组测试
     """
@@ -133,6 +155,7 @@ class TS_3(unittest.TestCase):
         """
         self.__class__.n += 1
         logging.info(f"运行修改：{self.n}")
+        self.assertTrue(False)
 
 
 if __name__ == '__main__':
@@ -143,9 +166,9 @@ if __name__ == '__main__':
         description='随意描述',
         thread_count=10,
         thread_start_wait=0,
-        tries=5,
-        delay=1,
-        back_off=2,
+        tries=3,
+        delay=0,
+        back_off=1,
         retry=False,
         sequential_execution=True,
         lang='cn'
@@ -157,5 +180,6 @@ if __name__ == '__main__':
     suite_sub.addTests(loader.loadTestsFromTestCase(TS_2))
     suite.addTests(suite_sub)
     suite.addTests(loader.loadTestsFromTestCase(TS_3))
+    suite.addTests(loader.loadTestsFromTestCase(TS_4))
 
     test_runner.run(suite, debug=True)
