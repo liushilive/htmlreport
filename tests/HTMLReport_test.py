@@ -181,5 +181,5 @@ if __name__ == '__main__':
     suite.addTests(suite_sub)
     suite.addTests(loader.loadTestsFromTestCase(TS_3))
     suite.addTests(loader.loadTestsFromTestCase(TS_4))
-
+    suite.addTests(loader.loadTestsFromNames(['HTMLReport_test.TS_4']))
     test_runner.run(suite, debug=True)

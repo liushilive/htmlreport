@@ -20,6 +20,7 @@ import queue
 import random
 import time
 from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import Manager
 from unittest.suite import TestSuite
 from xml.sax import saxutils
 
@@ -113,8 +114,7 @@ class TestRunner(TemplateMixin, TestSuite):
                               and 'max_delay = {} 必须大于或等于 delay = {}'
                               or 'max_delay = {} must be greater than or equal to delay = {}').format(max_delay, delay))
         self.tries, self.delay, self.back_off, self.max_delay, self.retry = tries, delay, back_off, max_delay, retry
-        self.tc_dict = {}
-        self.tc_queue = queue.Queue()
+        self.tc_dict = Manager().dict()
 
     def _threadPoolExecutorTestCase(self, tmp_list, result):
         """多线程运行"""
@@ -130,8 +130,13 @@ class TestRunner(TemplateMixin, TestSuite):
                             getattr(result, '_moduleSetUpFailed', False)):
                         continue
                 pool.submit(test_case, result)
+
+                self.tc_dict[test_case.__class__] -= 1
+                if self.tc_dict[test_case.__class__] == 0:
+                    self._tearDownPreviousClass(None, result)
+
                 time.sleep(self.thread_start_wait)
-        self._tearDownPreviousClass(None, result)
+
         self._handleModuleTearDown(result)
 
     def run(self, test: TestSuite, debug: bool = False):
@@ -149,6 +154,13 @@ class TestRunner(TemplateMixin, TestSuite):
             logging.info("预计并发线程数：" + str(self.thread_count))
         else:
             logging.info("The number of concurrent threads is expected to be " + str(self.thread_count))
+
+        for test_case in test:
+            tmp_class_name = test_case.__class__
+            if tmp_class_name not in self.tc_dict:
+                self.tc_dict[tmp_class_name] = 0
+            else:
+                self.tc_dict[tmp_class_name] += 1
 
         if self.sequential_execution:
             # 执行套件添加顺序
@@ -222,7 +234,6 @@ class TestRunner(TemplateMixin, TestSuite):
 
     def _generateReport(self, result):
         """生成报告"""
-        # report_attr = self._getReportAttributes(result)
         generator = 'HTMLReport {} {}'.format(__author__, __version__)
         stylesheet = self._generate_stylesheet()
         heading = self._generate_heading(result)
