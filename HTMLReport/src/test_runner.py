@@ -210,6 +210,8 @@ class TestRunner(TemplateMixin, TestSuite):
         self._generateReport(result)
         logging.info(s)
 
+        return result
+
     @staticmethod
     def _sortResult(result_list):
         """unittest不以任何特定的顺序运行。在这里把它们按类分组。"""
