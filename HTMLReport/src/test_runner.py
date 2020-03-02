@@ -48,8 +48,8 @@ class TestRunner(TemplateMixin, TestSuite):
     """测试执行器"""
 
     def __init__(self, report_file_name: str = None, log_file_name: str = None, output_path: str = None,
-                 title: str = None, description: str = None, tries: int = 0, delay: int = 1, back_off: int = 1,
-                 max_delay: int = 120, retry: bool = True, thread_count: int = 1, thread_start_wait: float = 0,
+                 title: str = None, description: str = None, tries: int = 0, delay: float = 1, back_off: float = 1,
+                 max_delay: float = 120, retry: bool = True, thread_count: int = 1, thread_start_wait: float = 0,
                  sequential_execution: bool = False, lang: str = "cn"):
         """测试执行器
 
