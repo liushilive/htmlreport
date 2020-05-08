@@ -72,9 +72,9 @@ class TestRunner(TemplateMixin, TestSuite):
         super().__init__()
         self.LANG = lang in ("cn", "en") and lang or "cn"
 
-        self.title = title or (self.LANG == 'cn' and self.DEFAULT_TITLE or self.DEFAULT_TITLE_en)
+        self.title = title or (self.LANG == "cn" and self.DEFAULT_TITLE or self.DEFAULT_TITLE_en)
         self.description = description or (
-                self.LANG == 'cn' and self.DEFAULT_DESCRIPTION or self.DEFAULT_DESCRIPTION_en)
+                self.LANG == "cn" and self.DEFAULT_DESCRIPTION or self.DEFAULT_DESCRIPTION_en)
 
         self.thread_count = thread_count
         self.thread_start_wait = thread_start_wait
@@ -85,7 +85,7 @@ class TestRunner(TemplateMixin, TestSuite):
         if not os.path.exists(dir_to):
             os.makedirs(dir_to)
 
-        random_name = 'test_{}_{}'.format(time.strftime('%Y_%m_%d_%H_%M_%S'), random.randint(1, 999))
+        random_name = f"test_{time.strftime('%Y_%m_%d_%H_%M_%S')}_{random.randint(1, 999)}"
         report_name = f'{report_file_name or random_name}.html'
 
         self.log_name = f"{log_file_name or report_file_name or random_name}.log"
@@ -98,21 +98,21 @@ class TestRunner(TemplateMixin, TestSuite):
         self.stopTime = datetime.datetime.now()
 
         if tries < 0:
-            raise ValueError((lang == 'cn'
-                              and 'tries = {} 必须大于或等于 0'
-                              or 'tries = {} must be greater than or equal to 0').format(tries))
+            raise ValueError((lang == "cn"
+                              and "tries = {} 必须大于或等于 0"
+                              or "tries = {} must be greater than or equal to 0").format(tries))
         if delay < 0:
-            raise ValueError((lang == 'cn'
-                              and 'delay = {} 必须大于或等于 0'
-                              or 'delay = {} must be greater than or equal to 0').format(delay))
+            raise ValueError((lang == "cn"
+                              and "delay = {} 必须大于或等于 0"
+                              or "delay = {} must be greater than or equal to 0").format(delay))
         if back_off < 1:
-            raise ValueError((lang == 'cn'
-                              and 'back_off = {} 必须大于或等于 1'
-                              or 'back_off = {} must be greater than or equal to 1').format(back_off))
+            raise ValueError((lang == "cn"
+                              and "back_off = {} 必须大于或等于 1"
+                              or "back_off = {} must be greater than or equal to 1").format(back_off))
         if max_delay < delay:
-            raise ValueError((lang == 'cn'
-                              and 'max_delay = {} 必须大于或等于 delay = {}'
-                              or 'max_delay = {} must be greater than or equal to delay = {}').format(max_delay, delay))
+            raise ValueError((lang == "cn"
+                              and "max_delay = {} 必须大于或等于 delay = {}"
+                              or "max_delay = {} must be greater than or equal to delay = {}").format(max_delay, delay))
         self.tries, self.delay, self.back_off, self.max_delay, self.retry = tries, delay, back_off, max_delay, retry
         self.tc_dict = Manager().dict()
 
@@ -126,8 +126,8 @@ class TestRunner(TemplateMixin, TestSuite):
                     self._handleClassSetUp(test_case, result)
                     result._previousTestClass = test_case.__class__
 
-                    if (getattr(test_case.__class__, '_classSetupFailed', False) or
-                            getattr(result, '_moduleSetUpFailed', False)):
+                    if (getattr(test_case.__class__, "_classSetupFailed", False) or
+                            getattr(result, "_moduleSetUpFailed", False)):
                         continue
                 pool.submit(test_case, result)
 
@@ -151,9 +151,9 @@ class TestRunner(TemplateMixin, TestSuite):
 
         result = Result(self.LANG, self.tries, self.delay, self.back_off, self.max_delay, self.retry)
         if self.LANG == "cn":
-            logging.info("预计并发线程数：" + str(self.thread_count))
+            logging.info(f"预计并发线程数：{str(self.thread_count)}")
         else:
-            logging.info("The number of concurrent threads is expected to be " + str(self.thread_count))
+            logging.info(f"The number of concurrent threads is expected to be {str(self.thread_count)}")
 
         for test_case in test:
             tmp_class_name = test_case.__class__
@@ -193,11 +193,11 @@ class TestRunner(TemplateMixin, TestSuite):
             logging.error(result.stderr_steams.getvalue())
 
         if self.LANG == "cn":
-            s = '\n测试结束！\n运行时间: {time}\n共计执行用例数量：{count}\n执行成功用例数量：{Pass}' \
-                '\n执行失败用例数量：{fail}\n跳过执行用例数量：{skip}\n产生异常用例数量：{error}\n'
+            s = "\n测试结束！\n运行时间: {time}\n共计执行用例数量：{count}\n执行成功用例数量：{Pass}" \
+                "\n执行失败用例数量：{fail}\n跳过执行用例数量：{skip}\n产生异常用例数量：{error}\n"
         else:
-            s = '\nEOT！\nRan {count} tests in {time}\n\nPASS：{Pass}' \
-                '\nFailures：{fail}\nSkipped：{skip}\nErrors：{error}\n'
+            s = "\nEOT！\nRan {count} tests in {time}\n\nPASS：{Pass}" \
+                "\nFailures：{fail}\nSkipped：{skip}\nErrors：{error}\n"
         count = result.success_count + result.failure_count + result.error_count + result.skip_count
         s = s.format(
             time=self.stopTime - self.startTime,
@@ -236,7 +236,7 @@ class TestRunner(TemplateMixin, TestSuite):
 
     def _generateReport(self, result):
         """生成报告"""
-        generator = 'HTMLReport {} {}'.format(__author__, __version__)
+        generator = f"HTMLReport {__author__} {__version__}"
         stylesheet = self._generate_stylesheet()
         heading = self._generate_heading(result)
         log_file = self._generate_log(self.log_name)
@@ -256,7 +256,7 @@ class TestRunner(TemplateMixin, TestSuite):
             ending=ending
         )
 
-        with open(self.path_file, 'w', encoding="utf8") as report_file:
+        with open(self.path_file, "w", encoding="utf8") as report_file:
             report_file.write(output)
 
     def _generate_stylesheet(self):
@@ -299,12 +299,12 @@ class TestRunner(TemplateMixin, TestSuite):
             if cls.__module__ == "__main__":
                 name = cls.__name__
             else:
-                name = "{}.{}".format(cls.__module__, cls.__name__)
+                name = f"{cls.__module__}.{cls.__name__}"
             doc = cls.__doc__ and cls.__doc__.strip().split("\n")[0] or ""
-            desc = doc and '{}: {}'.format(name, doc) or name
+            desc = doc and f"{name}: {doc}" or name
             count = np + nf + ne + ns
             row = self.REPORT_CLASS_TMPL.format(
-                style=ne > 0 and 'errorClass' or nf > 0 and 'failClass' or np > 0 and 'passClass' or 'skipClass',
+                style=ne > 0 and "errorClass" or nf > 0 and "failClass" or np > 0 and "passClass" or "skipClass",
                 desc=desc,
                 count=count,
                 Pass=np,
@@ -313,7 +313,7 @@ class TestRunner(TemplateMixin, TestSuite):
                 skip=ns,
                 tries=nr,
                 statistics=np / (count == 0 and 1 or count),
-                cid='c{}'.format(cid + 1),
+                cid=f"c{cid + 1}",
             )
             rows.append(row)
 
@@ -322,7 +322,7 @@ class TestRunner(TemplateMixin, TestSuite):
 
         count = result.success_count + result.failure_count + result.error_count + result.skip_count
         report = self.REPORT_TMPL.format(
-            test_list=''.join(rows),
+            test_list="".join(rows),
             count=count,
             Pass=result.success_count,
             fail=result.failure_count,
@@ -335,17 +335,17 @@ class TestRunner(TemplateMixin, TestSuite):
 
     def _generate_report_test(self, rows, cid, tid, n, t, o, i, r, s):
         # 0: success; 1: fail; 2: error; 3: skip
-        tid = (n == 0 and 'p' or n == 3 and 's' or n == 2 and 'e' or 'f') + 't{}.{}'.format(cid + 1, tid + 1)
-        name = t.id().split('.')[-1]
+        tid = (n == 0 and "p" or n == 3 and "s" or n == 2 and "e" or "f") + f"t{cid + 1}.{tid + 1}"
+        name = t.id().split(".")[-1]
         doc = "_testMethodDoc" in t.__dir__() and t.__getattribute__("_testMethodDoc") or ""
         doc = doc.strip().split("\n")[0]
-        desc = doc and ('{}: {}'.format(name, doc)) or name
+        desc = doc and f"{name}: {doc}" or name
 
         row = self.REPORT_TEST_WITH_OUTPUT_TMPL.format(
             tid=tid,
-            tid1=r == 0 and tid + '.1' or tid,
-            style=(n == 0 and 'passCase' or n == 2 and 'errorCase' or
-                   n == 1 and 'failCase' or n == 3 and 'skipCase' or 'none'),
+            tid1=r == 0 and tid + ".1" or tid,
+            style=(n == 0 and "passCase" or n == 2 and "errorCase" or
+                   n == 1 and "failCase" or n == 3 and "skipCase" or "none"),
             desc=desc,
             status_cn=self.STATUS_cn[n],
             status_en=self.STATUS_en[n],
@@ -361,7 +361,7 @@ class TestRunner(TemplateMixin, TestSuite):
                     img_list += self._generate_img(img)
 
             script = self.REPORT_TEST_OUTPUT_TMPL.format(
-                id='{}.{}'.format(tid, x + 1),
+                id=f"{tid}.{x + 1}",
                 output=saxutils.escape(o.get(x))
             )
             if r == 0:
@@ -376,8 +376,8 @@ class TestRunner(TemplateMixin, TestSuite):
                 row = self.REPORT_TEST_WITH_OUTPUT_SUB_RETRY_TMPL.format(
                     tid=tid,
                     r=x + 1,
-                    style=(s.get(x) == 0 and 'passCase' or s.get(x) == 2 and 'errorCase' or
-                           s.get(x) == 1 and 'failCase' or s.get(x) == 3 and 'skipCase' or 'none'),
+                    style=(s.get(x) == 0 and "passCase" or s.get(x) == 2 and "errorCase" or
+                           s.get(x) == 1 and "failCase" or s.get(x) == 3 and "skipCase" or "none"),
                     n=x + 1,
                     status_cn=self.STATUS_cn[s.get(x)],
                     status_en=self.STATUS_en[s.get(x)],

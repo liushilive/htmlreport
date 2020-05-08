@@ -38,8 +38,7 @@ def addImage(base64_data: bytes, title: str = "", describe: str = ""):
             if current_id not in imageList:
                 imageList[current_id] = []
 
-            random_name = 'image_{}_{}_{}.jpg'.format(current_id, time.strftime('%Y_%m_%d_%H_%M_%S'),
-                                                      random.randint(1, 999))
+            random_name = f"image_{current_id}_{time.strftime('%Y_%m_%d_%H_%M_%S')}_{random.randint(1, 999)}.jpg"
 
             image_path = os.path.join(report_path, "images")
             if not os.path.exists(image_path):

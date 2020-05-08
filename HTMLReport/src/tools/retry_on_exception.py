@@ -13,8 +13,8 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 """
-__retry = '%retry'  # 重试
-__no_retry = '%no_retry'  # 不重试
+__retry = "%retry"  # 重试
+__no_retry = "%no_retry"  # 不重试
 
 retry_lists = [
     # 存储重试列表

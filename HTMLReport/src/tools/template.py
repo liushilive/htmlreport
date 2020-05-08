@@ -19,22 +19,22 @@ class TemplateMixin(object):
     # 定义生成HTML结果文件所需要的模板。
 
     STATUS_cn = {
-        0: '通过',
-        1: '失败',
-        2: '错误',
-        3: '跳过',
+        0: "通过",
+        1: "失败",
+        2: "错误",
+        3: "跳过",
     }
     STATUS_en = {
-        0: 'pass',
-        1: 'fail',
-        2: 'error',
-        3: 'skip',
+        0: "pass",
+        1: "fail",
+        2: "error",
+        3: "skip",
     }
 
-    DEFAULT_TITLE = '测试报告'
-    DEFAULT_TITLE_en = 'Test Results'
-    DEFAULT_DESCRIPTION = '测试描述'
-    DEFAULT_DESCRIPTION_en = 'Test Description'
+    DEFAULT_TITLE = "测试报告"
+    DEFAULT_TITLE_en = "Test Results"
+    DEFAULT_DESCRIPTION = "测试描述"
+    DEFAULT_DESCRIPTION_en = "Test Description"
 
     HTML_TMPL = r"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

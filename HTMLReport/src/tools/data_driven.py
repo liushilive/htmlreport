@@ -17,14 +17,15 @@ under the License.
 
 在其基础上进行改写以符合个性化需求。
 """
+import logging
 import re
 from functools import wraps
 
 from . import retry_on_exception
 
-_DATA_ATTR = '%values'  # 存储测试必须运行的数据
-_UNPACK_ATTR = '%unpack'  # 解包
-_index_len = 1  # 默认最大的case索引长度
+_DATA_ATTR: str = "%values"  # 存储测试必须运行的数据
+_UNPACK_ATTR: str = "%unpack"  # 解包
+_index_len: int = 1  # 默认最大的case索引长度
 
 trivial_types = (type(None), bool, int, float, str)
 
@@ -70,7 +71,7 @@ def iter_data(iterable):
     return wrapper
 
 
-def _mk_test_name(name, value, index=0):
+def _mk_test_name(name, value, index: int = 0):
     """
     为测试用例生成一个新名称。
 
@@ -78,15 +79,15 @@ def _mk_test_name(name, value, index=0):
     """
 
     # 在索引之前添加0以保持顺序
-    index = "{0:0{1}}".format(index + 1, _index_len)
+    index = f"{index + 1:0{_index_len}}"
     if not _is_trivial(value):
-        return "{0}_{1}".format(name, index)
+        return f"{name}_{index}"
     try:
         value = str(value)
     except UnicodeEncodeError:
-        value = value.encode('ascii', 'backslashreplace')
-    test_name = "{0}_{1}_{2}".format(name, index, value)
-    return re.sub(r'\W|^(?=\d)', '_', test_name)
+        value = value.encode("ascii", "backslashreplace")
+    test_name = f"{name}_{index}_{value}"
+    return re.sub(r"\W|^(?=\d)", "_", test_name)
 
 
 def _feed_data(func, new_name, *args, **kwargs):
@@ -97,6 +98,10 @@ def _feed_data(func, new_name, *args, **kwargs):
 
     @wraps(func)
     def wrapper(self):
+        if args:
+            logging.info(f"args:\n{args}")
+        if kwargs:
+            logging.info(f"kwargs:\n{kwargs}")
         return func(self, *args, **kwargs)
 
     wrapper.__name__ = new_name
@@ -114,9 +119,9 @@ def _add_test(cls, test_name, func, *args, **kwargs):
     setattr(cls, test_name, _feed_data(func, test_name, *args, **kwargs))
     # 测试重试
     if hasattr(func, retry_on_exception.__retry):
-        retry_on_exception.retry_lists.append(cls.__name__ + '.' + test_name)
+        retry_on_exception.retry_lists.append(cls.__name__ + "." + test_name)
     if hasattr(func, retry_on_exception.__no_retry):
-        retry_on_exception.no_retry_lists.append(cls.__name__ + '.' + test_name)
+        retry_on_exception.no_retry_lists.append(cls.__name__ + "." + test_name)
 
 
 def ddt(cls):

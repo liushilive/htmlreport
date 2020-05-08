@@ -21,7 +21,7 @@ from .src.tools.log.handler_factory import HandlerFactory
 
 __author__ = '刘士'
 # __version__ = '2.0.6a'
-__version__ = '2.1.4'
+__version__ = '2.1.5'
 
 from .src.test_runner import TestRunner
 from .src.tools import data_driven as ddt
@@ -29,6 +29,7 @@ from .src.tools.retry_on_exception import retry, no_retry
 from .src.tools.save_images import addImage
 
 for handler in logging.getLogger().handlers:
+    handler: logging
     if not handler.get_name():
         logging.getLogger().removeHandler(handler)
 

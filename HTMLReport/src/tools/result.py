@@ -62,53 +62,56 @@ class Result(TestResult):
         self.time = {}
 
     def startTest(self, test):
-        logging.info((self.LANG == 'cn' and "开始测试： {}" or "Start Test: {}").format(test))
+        logging.info((self.LANG == "cn" and "开始测试： {}" or "Start Test: {}").format(test))
         current_id = str(threading.current_thread().ident)
         if current_id in self.result_tmp:
-            self.result_tmp[current_id]['tries'] += 1
+            self.result_tmp[current_id]["tries"] += 1
         else:
-            self.result_tmp[current_id] = {
-                'result_code': 0,
-                'testCase_object': test,
-                'test_output': {},
-                'image_paths': {},
-                'tries': 0,
-                'retry': True,
-                'style': {},
-                'local_delay': self.delay
-            }
+            self.result_tmp[current_id] = dict(
+                result_code=0,
+                testCase_object=test,
+                test_output={},
+                image_paths={},
+                tries=0,
+                retry=True,
+                style={},
+                local_delay=self.delay
+            )
 
         self.time[str(threading.current_thread().ident)] = time.time()
         TestResult.startTest(self, test)
 
     def stopTest(self, test):
         end_time = time.time()
-        logging.info((self.LANG == 'cn' and "测试结束： {}" or "Stop Test: {}").format(test))
-        logging.info((self.LANG == 'cn' and "耗时： {}" or "Duration: {}").format(
+        logging.info((self.LANG == "cn" and "测试结束： {}" or "Stop Test: {}").format(test))
+        logging.info((self.LANG == "cn" and "耗时： {}" or "Duration: {}").format(
             end_time - self.time[str(threading.current_thread().ident)]))
         current_id = str(threading.current_thread().ident)
-        tries = self.result_tmp[current_id]['tries']
+        tries = self.result_tmp[current_id]["tries"]
         if current_id in save_images.imageList:
             tmp = save_images.imageList.pop(current_id)
             self.result_tmp[current_id]["image_paths"][tries] = tmp
         tmp = HandlerFactory.get_stream_value()
-        self.result_tmp[current_id]['test_output'][tries] = tmp
+        self.result_tmp[current_id]["test_output"][tries] = tmp
 
         # 停止重试
-        test_name = test.__class__.__name__ + '.' + test.__getattribute__("_testMethodName")
+        test_name = test.__class__.__name__ + "." + test.__getattribute__("_testMethodName")
         if (not self.retry and test_name not in retry_lists) or (
                 self.retry and test_name in no_retry_lists
-        ) or self.tries <= tries or self.result_tmp[current_id]['result_code'] in (0, 3):
-            self.result_tmp[current_id]['retry'] = False
+        ) or self.tries <= tries or self.result_tmp[current_id]["result_code"] in (0, 3):
+            self.result_tmp[current_id]["retry"] = False
 
-        if self.result_tmp[current_id]['retry']:
+        if self.result_tmp[current_id]["retry"]:
             # 重试
-            if self.result_tmp[current_id]['local_delay'] > self.max_delay:
-                self.result_tmp[current_id]['local_delay'] = self.max_delay
-            logging.info((self.LANG == 'cn' and "等待 {} 秒后重试" or "Retrying in {} seconds...").format(
-                self.result_tmp[current_id]['local_delay']))
-            time.sleep(self.result_tmp[current_id]['local_delay'])
-            self.result_tmp[current_id]['local_delay'] *= self.back_off
+            if self.result_tmp[current_id]["local_delay"] > self.max_delay:
+                self.result_tmp[current_id]["local_delay"] = self.max_delay
+            logging.info(
+                (self.LANG == "cn" and "等待 {} 秒后重试" or "Retrying in {} seconds...").format(
+                    self.result_tmp[current_id]["local_delay"]
+                )
+            )
+            time.sleep(self.result_tmp[current_id]["local_delay"])
+            self.result_tmp[current_id]["local_delay"] *= self.back_off
             test(self)
         else:
             # 最后清理
@@ -120,10 +123,10 @@ class Result(TestResult):
                 self.skip_set.remove(current_id)
             if current_id in self.error_set:
                 self.error_set.remove(current_id)
-            if 'retry' in self.result_tmp[current_id]:
-                del self.result_tmp[current_id]['retry']
-            if 'local_delay' in self.result_tmp[current_id]:
-                del self.result_tmp[current_id]['local_delay']
+            if "retry" in self.result_tmp[current_id]:
+                del self.result_tmp[current_id]["retry"]
+            if "local_delay" in self.result_tmp[current_id]:
+                del self.result_tmp[current_id]["local_delay"]
             # 产生结果
             self.result.append(self.result_tmp.pop(current_id))
 
@@ -132,11 +135,11 @@ class Result(TestResult):
 
         self._steams_write_doc("Skip", test)
 
-        logging.info((self.LANG == 'cn' and "跳过测试： {}\n{}" or "Skip Test: {}\n{}").format(test, reason))
+        logging.info((self.LANG == "cn" and "跳过测试： {}\n{}" or "Skip Test: {}\n{}").format(test, reason))
 
         current_id = str(threading.current_thread().ident)
         self.result_tmp[current_id]["result_code"] = 3
-        self.result_tmp[current_id]["style"][self.result_tmp[current_id]['tries']] = 3
+        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = 3
         if current_id not in self.skip_set:
             self.skip_count += 1
             self.skip_set.add(current_id)
@@ -146,11 +149,11 @@ class Result(TestResult):
 
         self._steams_write_doc("Pass", test)
 
-        logging.info((self.LANG == 'cn' and "测试执行通过： {}" or "Pass Test: {}").format(test))
+        logging.info((self.LANG == "cn" and "测试执行通过： {}" or "Pass Test: {}").format(test))
 
         current_id = str(threading.current_thread().ident)
         self.result_tmp[current_id]["result_code"] = 0
-        self.result_tmp[current_id]["style"][self.result_tmp[current_id]['tries']] = 0
+        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = 0
         if current_id not in self.success_set:
             self.success_count += 1
             self.success_set.add(current_id)
@@ -165,11 +168,11 @@ class Result(TestResult):
 
         self._steams_write_doc("Error", test)
 
-        logging.error((self.LANG == 'cn' and "测试产生错误： {}\n{}" or "Error Test: {}\n{}").format(test, _exc_str))
+        logging.error((self.LANG == "cn" and "测试产生错误： {}\n{}" or "Error Test: {}\n{}").format(test, _exc_str))
 
         current_id = str(threading.current_thread().ident)
         self.result_tmp[current_id]["result_code"] = 2
-        self.result_tmp[current_id]["style"][self.result_tmp[current_id]['tries']] = 2
+        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = 2
         if current_id not in self.error_set:
             self.error_count += 1
             self.error_set.add(current_id)
@@ -184,7 +187,7 @@ class Result(TestResult):
 
         current_id = str(threading.current_thread().ident)
         self.result_tmp[current_id]["result_code"] = 1
-        self.result_tmp[current_id]["style"][self.result_tmp[current_id]['tries']] = 1
+        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = 1
         if current_id not in self.failure_set:
             self.failure_count += 1
             self.failure_set.add(current_id)
@@ -195,10 +198,10 @@ class Result(TestResult):
         else:
             steams = self.stderr_steams
 
-        steams.write(f'{result}\t')
+        steams.write(f"{result}\t")
         steams.write(str(test))
         doc = "_testMethodDoc" in test.__dir__() and test.__getattribute__("_testMethodDoc") or ""
         if doc:
             steams.write("\t")
             steams.write(doc.strip().split("\n")[0])
-        steams.write('\n')
+        steams.write("\n")

@@ -66,11 +66,11 @@ class TS_1(unittest.TestCase):
             alt = """百度一下你就知道了，我是一个很长很长的文本哦,
 我还换行了哦
 再来一个"""
-            addImage(image, "百度 {}".format(random.randint(0, 10)), alt)
-            addImage(image, "百度 {}".format(random.randint(0, 10)), alt)
-            addImage(image, "百度 {}".format(random.randint(0, 10)), alt)
-            addImage(image, "百度 {}".format(random.randint(0, 10)), alt)
-            addImage(image, "百度 {}".format(random.randint(0, 10)), alt)
+            addImage(image, f"百度 {random.randint(0, 10)}", alt)
+            addImage(image, f"百度 {random.randint(0, 10)}", alt)
+            addImage(image, f"百度 {random.randint(0, 10)}", alt)
+            addImage(image, f"百度 {random.randint(0, 10)}", alt)
+            addImage(image, f"百度 {random.randint(0, 10)}", alt)
 
 
 @ddt.ddt
@@ -160,18 +160,18 @@ class TS_4(unittest.TestCase):
 
 if __name__ == '__main__':
     test_runner = TestRunner(
-        report_file_name='index',
-        output_path='report',
-        title='一个简单的测试报告',
-        description='随意描述',
-        thread_count=10,
+        report_file_name="index",
+        output_path="report",
+        title="一个简单的测试报告",
+        description="随意描述",
+        thread_count=5,
         thread_start_wait=0,
         tries=3,
         delay=0,
         back_off=1,
         retry=False,
         sequential_execution=True,
-        lang='cn'
+        lang="cn"
     )
     suite = unittest.TestSuite()
     suite_sub = unittest.TestSuite()
@@ -181,5 +181,5 @@ if __name__ == '__main__':
     suite.addTests(suite_sub)
     suite.addTests(loader.loadTestsFromTestCase(TS_3))
     suite.addTests(loader.loadTestsFromTestCase(TS_4))
-    suite.addTests(loader.loadTestsFromNames(['HTMLReport_test.TS_4']))
+    suite.addTests(loader.loadTestsFromNames(["HTMLReport_test.TS_4"]))
     test_runner.run(suite, debug=True)
