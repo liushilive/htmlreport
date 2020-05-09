@@ -1,5 +1,7 @@
 # HTMLReport
 
+[![Downloads](https://pepy.tech/badge/htmlreport)](https://pepy.tech/project/htmlreport)
+
 `HTMLReport`是一个单元测试测试运行器，可以将测试结果保存在 Html 文件中，用于人性化的结果显示。
 
 仅支持**Python 3.x**
