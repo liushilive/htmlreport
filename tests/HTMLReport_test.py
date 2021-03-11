@@ -66,11 +66,8 @@ class TS_1(unittest.TestCase):
             alt = """百度一下你就知道了，我是一个很长很长的文本哦,
 我还换行了哦
 再来一个"""
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
+            for i in range(5):
+                addImage(image, f"百度 {i}", alt)
 
 
 @ddt.ddt

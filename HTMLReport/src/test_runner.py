@@ -74,7 +74,8 @@ class TestRunner(TemplateMixin, TestSuite):
 
         self.title = title or (self.LANG == "cn" and self.DEFAULT_TITLE or self.DEFAULT_TITLE_en)
         self.description = description or (
-                self.LANG == "cn" and self.DEFAULT_DESCRIPTION or self.DEFAULT_DESCRIPTION_en)
+                self.LANG == "cn" and self.DEFAULT_DESCRIPTION or self.DEFAULT_DESCRIPTION_en
+        )
 
         self.thread_count = thread_count
         self.thread_start_wait = thread_start_wait
@@ -94,8 +95,7 @@ class TestRunner(TemplateMixin, TestSuite):
 
         logging.getLogger().addHandler(HandlerFactory.get_rotating_file_handler(self.log_file_name))
 
-        self.startTime = datetime.datetime.now()
-        self.stopTime = datetime.datetime.now()
+        self.stopTime = self.startTime = datetime.datetime.now()
 
         if tries < 0:
             raise ValueError((lang == "cn"
@@ -116,7 +116,7 @@ class TestRunner(TemplateMixin, TestSuite):
         self.tries, self.delay, self.back_off, self.max_delay, self.retry = tries, delay, back_off, max_delay, retry
         self.tc_dict = Manager().dict()
 
-    def _threadPoolExecutorTestCase(self, tmp_list, result):
+    def _thread_pool_executor_test_case(self, tmp_list, result):
         """多线程运行"""
         with ThreadPoolExecutor(self.thread_count) as pool:
             for test_case in tmp_list:
@@ -181,10 +181,10 @@ class TestRunner(TemplateMixin, TestSuite):
                 test_case_queue.put(L.copy())
             while not test_case_queue.empty():
                 tmp_list = test_case_queue.get()
-                self._threadPoolExecutorTestCase(tmp_list, result)
+                self._thread_pool_executor_test_case(tmp_list, result)
         else:
             # 无序执行
-            self._threadPoolExecutorTestCase(test, result)
+            self._thread_pool_executor_test_case(test, result)
 
         self.stopTime = datetime.datetime.now()
         if result.stdout_steams.getvalue().strip():
@@ -207,13 +207,13 @@ class TestRunner(TemplateMixin, TestSuite):
             skip=result.skip_count,
             error=result.error_count
         )
-        self._generateReport(result)
+        self._generate_report(result)
         logging.info(s)
 
         return result
 
     @staticmethod
-    def _sortResult(result_list):
+    def _sort_result(result_list):
         """unittest不以任何特定的顺序运行。在这里把它们按类分组。"""
         remap = {}
         classes = []
@@ -231,16 +231,20 @@ class TestRunner(TemplateMixin, TestSuite):
                 classes.append(cls)
             remap[cls].append((n, t, o, i, r, s))
 
-        r = [(cls, remap[cls]) for cls in classes]
-        return r
+        result = []
+        for cls in classes:
+            re = remap[cls]
+            re = sorted(re, key=lambda x: str(x[1]))
+            result.append((cls, re))
+        return result
 
-    def _generateReport(self, result):
+    def _generate_report(self, result):
         """生成报告"""
         generator = f"HTMLReport {__author__} {__version__}"
         stylesheet = self._generate_stylesheet()
         heading = self._generate_heading(result)
         log_file = self._generate_log(self.log_name)
-        report = self._generate_report(result)
+        report = self._create_report(result)
 
         ending = self._generate_ending()
         js = self._generate_js()
@@ -277,11 +281,11 @@ class TestRunner(TemplateMixin, TestSuite):
         )
         return heading
 
-    def _generate_report(self, result):
+    def _create_report(self, result):
         rows = []
         nrs = 0
-        sortedResult = self._sortResult(result.result)
-        for cid, (cls, cls_results) in enumerate(sortedResult):
+        sorted_result = self._sort_result(result.result)
+        for cid, (cls, cls_results) in enumerate(sorted_result):
             np = nf = ne = ns = nr = 0
             for n, t, o, i, r, s in cls_results:
                 if n == 0:

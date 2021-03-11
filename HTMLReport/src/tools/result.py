@@ -30,7 +30,7 @@ class Result(TestResult):
     这里重写了 unittest.TestResult 的多个方法，比如 startTest(self, test) 等等
     """
 
-    def __init__(self, LANG, tries, delay, back_off, max_delay, retry):
+    def __init__(self, lang, tries, delay, back_off, max_delay, retry):
         super().__init__()
         self.success_count = 0
         self.failure_count = 0
@@ -44,7 +44,7 @@ class Result(TestResult):
         self.stderr_steams.write("\n")
         self.stdout_steams = StringIO()
         self.stdout_steams.write("\n")
-        self.LANG = LANG
+        self.LANG = lang
         self.tries, self.delay, self.back_off, self.max_delay, self.retry = tries, delay, back_off, max_delay, retry
         """
         返回结果是一个5个属性的字典的列表
