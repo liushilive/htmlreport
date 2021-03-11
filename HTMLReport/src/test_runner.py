@@ -165,20 +165,20 @@ class TestRunner(TemplateMixin, TestSuite):
         if self.sequential_execution:
             # 执行套件添加顺序
             test_case_queue = queue.Queue()
-            L = []
+            test_case_arr = []
             tmp_key = None
             for test_case in test:
                 tmp_class_name = test_case.__class__
                 if tmp_key == tmp_class_name:
-                    L.append(test_case)
+                    test_case_arr.append(test_case)
                 else:
                     tmp_key = tmp_class_name
-                    if len(L) != 0:
-                        test_case_queue.put(L.copy())
-                        L.clear()
-                    L.append(test_case)
-            if len(L) != 0:
-                test_case_queue.put(L.copy())
+                    if len(test_case_arr) != 0:
+                        test_case_queue.put(test_case_arr.copy())
+                        test_case_arr.clear()
+                    test_case_arr.append(test_case)
+            if len(test_case_arr) != 0:
+                test_case_queue.put(test_case_arr.copy())
             while not test_case_queue.empty():
                 tmp_list = test_case_queue.get()
                 self._thread_pool_executor_test_case(tmp_list, result)
