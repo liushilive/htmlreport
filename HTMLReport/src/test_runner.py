@@ -118,6 +118,7 @@ class TestRunner(TemplateMixin, TestSuite):
 
     def _thread_pool_executor_test_case(self, tmp_list, result):
         """多线程运行"""
+        t_list = []
         with ThreadPoolExecutor(self.thread_count) as pool:
             for test_case in tmp_list:
                 if _isnotsuite(test_case):
@@ -129,13 +130,15 @@ class TestRunner(TemplateMixin, TestSuite):
                     if (getattr(test_case.__class__, "_classSetupFailed", False) or
                             getattr(result, "_moduleSetUpFailed", False)):
                         continue
-                pool.submit(test_case, result)
+                while len(t_list) == self.thread_count:
+                    [t_list.remove(t) for t in t_list if t.done()]
+                t_list.append(pool.submit(test_case, result))
 
                 self.tc_dict[test_case.__class__] -= 1
                 if self.tc_dict[test_case.__class__] == 0:
                     self._tearDownPreviousClass(None, result)
 
-                time.sleep(self.thread_start_wait)
+                # time.sleep(self.thread_start_wait)
 
         self._handleModuleTearDown(result)
 
@@ -149,7 +152,8 @@ class TestRunner(TemplateMixin, TestSuite):
         if debug:
             logging.getLogger().setLevel(logging.DEBUG)
 
-        result = Result(self.LANG, self.tries, self.delay, self.back_off, self.max_delay, self.retry)
+        result = Result(self.LANG, self.tries, self.delay, self.back_off, self.max_delay, self.retry,
+                        self.thread_start_wait)
         if self.LANG == "cn":
             logging.info(f"预计并发线程数：{str(self.thread_count)}")
         else:

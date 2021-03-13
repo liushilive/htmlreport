@@ -30,7 +30,7 @@ class Result(TestResult):
     这里重写了 unittest.TestResult 的多个方法，比如 startTest(self, test) 等等
     """
 
-    def __init__(self, lang, tries, delay, back_off, max_delay, retry):
+    def __init__(self, lang, tries, delay, back_off, max_delay, retry, thread_start_wait):
         super().__init__()
         self.success_count = 0
         self.failure_count = 0
@@ -45,7 +45,8 @@ class Result(TestResult):
         self.stdout_steams = StringIO()
         self.stdout_steams.write("\n")
         self.LANG = lang
-        self.tries, self.delay, self.back_off, self.max_delay, self.retry = tries, delay, back_off, max_delay, retry
+        self.tries, self.delay, self.back_off, self.max_delay, self.retry, = tries, delay, back_off, max_delay, retry
+        self.thread_start_wait = thread_start_wait
         """
         返回结果是一个5个属性的字典的列表
         (
@@ -62,6 +63,8 @@ class Result(TestResult):
         self.time = {}
 
     def startTest(self, test):
+        if self.thread_start_wait:
+            logging.info(f"测试延迟启动：{self.thread_start_wait}s")
         logging.info((self.LANG == "cn" and "开始测试： {}" or "Start Test: {}").format(test))
         current_id = str(threading.current_thread().ident)
         if current_id in self.result_tmp:
