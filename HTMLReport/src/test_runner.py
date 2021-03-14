@@ -251,7 +251,7 @@ class TestRunner(TemplateMixin, TestSuite):
         report = self._create_report(result)
 
         ending = self._generate_ending()
-        js = self._generate_js()
+        js = self._generate_js(result)
         output = self.HTML_TMPL.format(
             title=saxutils.escape(self.title),
             generator=generator,
@@ -404,8 +404,25 @@ class TestRunner(TemplateMixin, TestSuite):
     def _generate_ending(self):
         return self.ENDING_TMPL
 
-    def _generate_js(self):
-        return self.JS
+    def _generate_js(self, result):
+        _data = f"""
+var chartData_cn = [
+  [{result.success_count}, "#1c965b", "通过"],
+  [{result.failure_count}, "#ff5722", "失败"],
+  [{result.error_count}, "#ff9800", "错误"],
+  [{result.skip_count}, "#64b5f6", "跳过"]
+];
+var chartData_en = [
+  [{result.success_count}, "#1c965b", "Passed"],
+  [{result.failure_count}, "#ff5722", "Failed"],
+  [{result.error_count}, "#ff9800", "Error"],
+  [{result.skip_count}, "#64b5f6", "Skipped"]
+];
+"""
+        _js = "function draw() {" + f"""
+goChart({"chartData_cn" if self.LANG == "cn" else "chartData_en"});
+""" + "}"
+        return _data + self.JS + _js
 
     def _generate_log(self, log_file):
         return self.REPORT_LOG_FILE_TMPL.format(
