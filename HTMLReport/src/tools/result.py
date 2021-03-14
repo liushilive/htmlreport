@@ -65,6 +65,7 @@ class Result(TestResult):
     def startTest(self, test):
         if self.thread_start_wait:
             logging.info(f"测试延迟启动：{self.thread_start_wait}s")
+            time.sleep(self.thread_start_wait)
         logging.info((self.LANG == "cn" and "开始测试： {}" or "Start Test: {}").format(test))
         current_id = str(threading.current_thread().ident)
         if current_id in self.result_tmp:

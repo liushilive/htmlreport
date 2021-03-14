@@ -138,8 +138,6 @@ class TestRunner(TemplateMixin, TestSuite):
                 if self.tc_dict[test_case.__class__] == 0:
                     self._tearDownPreviousClass(None, result)
 
-                # time.sleep(self.thread_start_wait)
-
         self._handleModuleTearDown(result)
 
     def run(self, test: TestSuite, debug: bool = False):
