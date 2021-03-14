@@ -74,11 +74,11 @@ import logging
 import random
 import unittest
 
-from HTMLReport import ddt, retry, TestRunner, addImage, no_retry
+from HTMLReport import ddt, TestRunner, addImage, no_retry, retry
 
 
-class TS_1(unittest.TestCase):
-    """第一组测试"""
+class TestOne(unittest.TestCase):
+    """常规测试"""
 
     def setUp(self) -> None:
         logging.debug("测试开始")
@@ -134,19 +134,14 @@ class TS_1(unittest.TestCase):
         """测试截图"""
         with open("baidu.png", 'rb') as f:
             image = base64.b64encode(f.read())
-            alt = """百度一下你就知道了，我是一个很长很长的文本哦,
-我还换行了哦
-再来一个"""
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
-            addImage(image, f"百度 {random.randint(0, 10)}", alt)
+            alt = """百度一下，你就知道了。"""
+            for i in range(5):
+                addImage(image, f"百度 {i}", alt)
 
 
 @ddt.ddt
-class TS_2(unittest.TestCase):
-    """第二组测试"""
+class TestDDT(unittest.TestCase):
+    """DDT 测试"""
 
     def setUp(self) -> None:
         logging.info("测试开始")
@@ -154,21 +149,14 @@ class TS_2(unittest.TestCase):
     def tearDown(self) -> None:
         logging.info("测试结束")
 
-    @retry
-    @ddt.data(*range(1, 6))
+    @ddt.data(*range(3))
     def test_a(self, n):
-        """
-        重试
-
-        :param n:
-        :return:
-        """
-        self.assertEqual(n, random.randint(1, 6))
+        self.assertEqual(n, random.randint(0, 2))
 
 
 @ddt.ddt
-class TS_3(unittest.TestCase):
-    """第二组测试"""
+class TestNoRetry(unittest.TestCase):
+    """测试 DDT 不重试"""
 
     def setUp(self) -> None:
         logging.info("测试开始")
@@ -177,20 +165,30 @@ class TS_3(unittest.TestCase):
         logging.info("测试结束")
 
     @no_retry
-    @ddt.data(*range(1, 6))
+    @ddt.data(*range(3))
     def test_a(self, n):
-        """
-        不重试
-
-        :param n:
-        :return:
-        """
-        self.assertEqual(n, random.randint(1, 6))
+        self.assertEqual(n, random.randint(0, 2))
 
 
-class TS_4(unittest.TestCase):
+@ddt.ddt
+class TestRetry(unittest.TestCase):
+    """测试 DDT 重试"""
+
+    def setUp(self) -> None:
+        logging.info("测试开始")
+
+    def tearDown(self) -> None:
+        logging.info("测试结束")
+
+    @retry
+    @ddt.data(*range(3))
+    def test_a(self, n):
+        self.assertEqual(n, random.randint(0, 2))
+
+
+class TestClassMethod(unittest.TestCase):
     """
-    第三组测试
+    测试 setUpClass
     """
 
     n = 0
@@ -210,20 +208,10 @@ class TS_4(unittest.TestCase):
         logging.info(f"后置计数：{self.n}")
 
     def test_1(self):
-        """
-        测试 setUpClass
-
-        :return:
-        """
         self.__class__.n += 1
         logging.info(f"运行修改：{self.n}")
 
     def test_2(self):
-        """
-        测试 setUpClass
-
-        :return:
-        """
         self.__class__.n += 1
         logging.info(f"运行修改：{self.n}")
         self.assertTrue(False)
@@ -235,25 +223,26 @@ if __name__ == '__main__':
         output_path="report",
         title="一个简单的测试报告",
         description="随意描述",
-        thread_count=1,
-        thread_start_wait=0,
+        thread_count=5,
+        thread_start_wait=0.1,
         tries=3,
         delay=0,
         back_off=1,
-        retry=False,
+        retry=True,
         sequential_execution=True,
         lang="cn"
     )
     suite = unittest.TestSuite()
     suite_sub = unittest.TestSuite()
     loader = unittest.TestLoader()
-    suite_sub.addTests(loader.loadTestsFromTestCase(TS_1))
-    suite_sub.addTests(loader.loadTestsFromTestCase(TS_2))
+    suite_sub.addTests(loader.loadTestsFromTestCase(TestOne))
+    suite_sub.addTests(loader.loadTestsFromTestCase(TestDDT))
     suite.addTests(suite_sub)
-    suite.addTests(loader.loadTestsFromTestCase(TS_3))
-    suite.addTests(loader.loadTestsFromTestCase(TS_4))
-    suite.addTests(loader.loadTestsFromNames(["HTMLReport_test.TS_4"]))
-    test_runner.run(suite, debug=True)
+    suite.addTests(loader.loadTestsFromTestCase(TestRetry))
+    suite.addTests(loader.loadTestsFromTestCase(TestNoRetry))
+    suite.addTests(loader.loadTestsFromTestCase(TestClassMethod))
+    suite.addTests(loader.loadTestsFromNames(["HTMLReport_test.TestClassMethod"]))
+    test_runner.run(suite)
 
 ```
 
