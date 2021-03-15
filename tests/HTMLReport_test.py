@@ -143,7 +143,6 @@ class TestClassMethod(unittest.TestCase):
     def test_2(self):
         self.__class__.n += 1
         logging.info(f"运行修改：{self.n}")
-        self.assertTrue(False)
 
 
 if __name__ == '__main__':

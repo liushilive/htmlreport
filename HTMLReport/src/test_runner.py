@@ -403,19 +403,24 @@ class TestRunner(TemplateMixin, TestSuite):
         return self.ENDING_TMPL
 
     def _generate_js(self, result):
+        chart_data_cn = []
+        chart_data_en = []
+        if result.success_count:
+            chart_data_cn.append([result.success_count, "#1c965b", "通过"])
+            chart_data_en.append([result.success_count, "#1c965b", "Passed"])
+        if result.failure_count:
+            chart_data_cn.append([result.failure_count, "#ff5722", "失败"])
+            chart_data_en.append([result.failure_count, "#ff5722", "Failed"])
+        if result.error_count:
+            chart_data_cn.append([result.error_count, "#ff9800", "错误"])
+            chart_data_en.append([result.error_count, "#ff9800", "Error"])
+        if result.skip_count:
+            chart_data_cn.append([result.skip_count, "#64b5f6", "跳过"])
+            chart_data_en.append([result.skip_count, "#64b5f6", "Skipped"])
+
         _data = f"""
-var chartData_cn = [
-  [{result.success_count}, "#1c965b", "通过"],
-  [{result.failure_count}, "#ff5722", "失败"],
-  [{result.error_count}, "#ff9800", "错误"],
-  [{result.skip_count}, "#64b5f6", "跳过"]
-];
-var chartData_en = [
-  [{result.success_count}, "#1c965b", "Passed"],
-  [{result.failure_count}, "#ff5722", "Failed"],
-  [{result.error_count}, "#ff9800", "Error"],
-  [{result.skip_count}, "#64b5f6", "Skipped"]
-];
+var chartData_cn = {chart_data_cn};
+var chartData_en = {chart_data_en};
 """
         _js = "function draw() {" + f"""
 goChart({"chartData_cn" if self.LANG == "cn" else "chartData_en"});
