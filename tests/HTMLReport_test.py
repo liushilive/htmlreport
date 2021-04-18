@@ -114,6 +114,9 @@ class TestRetry(unittest.TestCase):
     def test_a(self, n):
         self.assertEqual(n, random.randint(0, 2))
 
+    def test_b(self, n):
+        self.assertEqual(n, random.randint(0, 2))
+
 
 class TestClassMethod(unittest.TestCase):
     """
