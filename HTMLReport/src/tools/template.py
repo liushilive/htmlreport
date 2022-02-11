@@ -38,14 +38,14 @@ class TemplateMixin(object):
 
     HTML_TMPL = r"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{lang}">
 
 <head>
     <title>{title}</title>
     <meta name="generator" content="{generator}"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <style type="text/css" media="screen">{stylesheet}</style>
-    <script language="javascript" type="text/javascript">{js}</script>
+    <script type="text/javascript">{js}</script>
 </head>
 
 <body onload="load()">
@@ -63,7 +63,7 @@ class TemplateMixin(object):
     {heading} {log} {report} {ending}
     <div id="popup">
         <div class="bg">
-            <img src="" alt=""/>
+            <img id="popup-img"/>
         </div>
     </div>
 </div>
@@ -72,395 +72,401 @@ class TemplateMixin(object):
 </html>
 """
 
-    JS = """
-function addClass(e, c) {
-  if (!isClass(e, c)) {
-    if (e.className) {
-      e.className = e.className + " " + c;
-    } else {
-      e.className = c;
+    JS = """function addClass(e, c) {
+    if (!isClass(e, c)) {
+        if (e.className) {
+            e.className = e.className + " " + c;
+        } else {
+            e.className = c;
+        }
     }
-  }
 }
 
 function delClass(e, c) {
-  if (isClass(e, c)) {
-    // r = '/(?:^|\s)' + c + '(?!\S)/g';
-    let r = new RegExp('(?:^|\\s)' + c + '(?!\\S)', 'g');
-    e.className = e.className.replace(r, '');
-  }
+    if (isClass(e, c)) {
+        // r = '/(?:^|\s)' + c + '(?!\S)/g';
+        let r = new RegExp('(?:^|\s)' + c + '(?!\S)', 'g');
+        e.className = e.className.replace(r, '');
+    }
 }
 
 function isClass(e, c) {
-  let r = new RegExp('(?:^|\\s)' + c + '(?!\\S)');
-  return e.className.match(r);
+    let r = new RegExp('(?:^|\s)' + c + '(?!\S)');
+    return e.className.match(r);
 }
 
 function showCase(level) {
-  let trs = document.getElementsByTagName("tr");
-  for (let i = 0; i < trs.length; i++) {
-    let tr = trs[i];
-    let id = tr.id;
-    if (id.substr(0, 2) === "st") {
-      if (level === 4 || level === 3) {
-        delClass(tr, 'hiddenRow');
-      } else {
-        addClass(tr, 'hiddenRow');
-      }
+    let trs = document.getElementsByTagName("tr");
+    for (let i = 0; i < trs.length; i++) {
+        let tr = trs[i];
+        let id = tr.id;
+        if (id.substring(0, 2) === "st") {
+            if (level === 4 || level === 3) {
+                delClass(tr, 'hiddenRow');
+            } else {
+                addClass(tr, 'hiddenRow');
+            }
+        }
+        if (id.substring(0, 2) === "ft") {
+            if (level === 4 || level === 2) {
+                delClass(tr, 'hiddenRow');
+            } else {
+                addClass(tr, 'hiddenRow');
+            }
+        }
+        if (id.substring(0, 2) === "pt") {
+            if (level === 4 || level === 1) {
+                delClass(tr, 'hiddenRow');
+            } else {
+                addClass(tr, 'hiddenRow');
+            }
+        }
+        if (id.substring(0, 2) === "et") {
+            if (level === 4 || level === 5 || level === 2) {
+                delClass(tr, 'hiddenRow');
+            } else {
+                addClass(tr, 'hiddenRow');
+            }
+        }
+        if (id.substring(0, 4) === "div_") {
+            addClass(tr, 'hiddenRow');
+        }
     }
-    if (id.substr(0, 2) === "ft") {
-      if (level === 4 || level === 2) {
-        delClass(tr, 'hiddenRow');
-      } else {
-        addClass(tr, 'hiddenRow');
-      }
-    }
-    if (id.substr(0, 2) === "pt") {
-      if (level === 4 || level === 1) {
-        delClass(tr, 'hiddenRow');
-      } else {
-        addClass(tr, 'hiddenRow');
-      }
-    }
-    if (id.substr(0, 2) === "et") {
-      if (level === 4 || level === 5 || level === 2) {
-        delClass(tr, 'hiddenRow');
-      } else {
-        addClass(tr, 'hiddenRow');
-      }
-    }
-    if (id.substr(0, 4) === "div_") {
-      addClass(tr, 'hiddenRow');
-    }
-  }
 }
 
 function showClassDetail(cid, count) {
-  let id_list = Array(count);
-  let toHide = 1;
-  for (let i = 0; i < count; i++) {
-    let tid0 = "t" + cid.substr(1) + "." + (i + 1);
-    let tid = "f" + tid0;
-    let tr = document.getElementById(tid);
-    if (!tr) {
-      tid = "p" + tid0;
-      tr = document.getElementById(tid);
-      if (!tr) {
-        tid = "e" + tid0;
-        tr = document.getElementById(tid);
-        if (tr === null) {
-          tid = "s" + tid0;
-          tr = document.getElementById(tid);
+    let id_list = Array(count);
+    let toHide = 1;
+    for (let i = 0; i < count; i++) {
+        let tid0 = "t" + cid.substring(1) + "." + (i + 1);
+        let tid = "f" + tid0;
+        let tr = document.getElementById(tid);
+        if (!tr) {
+            tid = "p" + tid0;
+            tr = document.getElementById(tid);
+            if (!tr) {
+                tid = "e" + tid0;
+                tr = document.getElementById(tid);
+                if (tr === null) {
+                    tid = "s" + tid0;
+                    tr = document.getElementById(tid);
+                }
+            }
         }
-      }
+        id_list[i] = tid;
+        if (tr.className) {
+            toHide = 0;
+        }
     }
-    id_list[i] = tid;
-    if (tr.className) {
-      toHide = 0;
+    for (let i = 0; i < count; i++) {
+        let tid = id_list[i];
+        if (toHide && tid.indexOf("p") !== -1) {
+            addClass(document.getElementById(tid), 'hiddenRow');
+        } else {
+            delClass(document.getElementById(tid), 'hiddenRow');
+        }
     }
-  }
-  for (let i = 0; i < count; i++) {
-    let tid = id_list[i];
-    if (toHide && tid.indexOf("p") !== -1) {
-      addClass(document.getElementById(tid), 'hiddenRow');
-    } else {
-      delClass(document.getElementById(tid), 'hiddenRow');
+    let trs = document.getElementsByTagName("tr");
+    for (let i = 0; i < trs.length; i++) {
+        let tr = trs[i];
+        let id = tr.id;
+        if (id.substring(0, 4) === "div_") {
+            addClass(tr, 'hiddenRow');
+        }
     }
-  }
-  let trs = document.getElementsByTagName("tr");
-  for (let i = 0; i < trs.length; i++) {
-    let tr = trs[i];
-    let id = tr.id;
-    if (id.substr(0, 4) === "div_") {
-      addClass(tr, 'hiddenRow');
-    }
-  }
 }
 
 function showTestDetail(div_id, count, b) {
-  let details_div_s = document.getElementsByName(div_id);
-  for (let j = 0; j < details_div_s.length; j++) {
-    let details_div = details_div_s[j];
-    if (isClass(details_div, 'hiddenRow')) {
-      delClass(details_div, 'hiddenRow');
-    } else {
-      addClass(details_div, "hiddenRow");
-    }
-  }
-  for (let i = 1; i <= count; i++) {
-    let details_div_s = document.getElementsByName(div_id + '.' + i);
+    let details_div_s = document.getElementsByName(div_id);
     for (let j = 0; j < details_div_s.length; j++) {
-      let details_div = details_div_s[j];
-      if (details_div !== undefined) {
-        if (b && isClass(details_div, 'hiddenRow')) {
-          delClass(details_div, 'hiddenRow');
+        let details_div = details_div_s[j];
+        if (isClass(details_div, 'hiddenRow')) {
+            delClass(details_div, 'hiddenRow');
         } else {
-          addClass(details_div, "hiddenRow");
+            addClass(details_div, "hiddenRow");
         }
-      }
     }
-  }
+    for (let i = 1; i <= count; i++) {
+        let details_div_s = document.getElementsByName(div_id + '.' + i);
+        for (let j = 0; j < details_div_s.length; j++) {
+            let details_div = details_div_s[j];
+            if (details_div !== undefined) {
+                if (b && isClass(details_div, 'hiddenRow')) {
+                    delClass(details_div, 'hiddenRow');
+                } else {
+                    addClass(details_div, "hiddenRow");
+                }
+            }
+        }
+    }
 }
 
 function html_escape(s) {
-  s = s.replace(/&/g, "&amp;");
-  s = s.replace(/</g, "&lt;");
-  s = s.replace(/>/g, "&gt;");
-  return s;
+    s = s.replace(/&/g, "&amp;");
+    s = s.replace(/</g, "&lt;");
+    s = s.replace(/>/g, "&gt;");
+    return s;
 }
 
 function goChart(dataArr) {
 
-  // 声明所需变量
-  var canvas, ctx;
-  // 图表属性
-  var cWidth, cHeight, cMargin, cSpace;
-  // 饼状图属性
-  var radius, ox, oy;//半径 圆心
-  var tWidth, tHeight;//图例宽高
-  var posX, posY, textX, textY;
-  var startAngle, endAngle;
-  var totleNb;
-  // 运动相关变量
-  var ctr, numctr, speed;
-  //鼠标移动
-  var mousePosition = {};
+    // 声明所需变量
+    var canvas, ctx;
+    // 图表属性
+    var cWidth, cHeight, cMargin, cSpace;
+    // 饼状图属性
+    var radius, ox, oy;//半径 圆心
+    var tWidth, tHeight;//图例宽高
+    var posX, posY, textX, textY;
+    var startAngle, endAngle;
+    var totleNb;
+    // 运动相关变量
+    var ctr, numctr, speed;
+    //鼠标移动
+    var mousePosition = {};
 
-  //线条和文字
-  var lineStartAngle, line, textPadding, textMoveDis;
+    //线条和文字
+    var lineStartAngle, line, textPadding, textMoveDis;
 
-  // 获得canvas上下文
-  canvas = document.getElementById("chart");
-  if (canvas && canvas.getContext) {
-    ctx = canvas.getContext("2d");
-  }
-  initChart();
-
-  // 图表初始化
-  function initChart() {
-    // 图表信息
-    cMargin = 20;
-    cSpace = 40;
-
-    canvas.width = canvas.parentNode.getAttribute("width") * 2;
-    canvas.height = canvas.parentNode.getAttribute("height") * 2;
-    canvas.style.height = canvas.height / 2 + "px";
-    canvas.style.width = canvas.width / 2 + "px";
-    cHeight = canvas.height - cMargin * 2;
-    cWidth = canvas.width - cMargin * 2;
-
-    //饼状图信息
-    radius = cHeight * 2 / 6;  //半径  高度的2/6
-    ox = canvas.width / 2 + cSpace;  //圆心
-    oy = canvas.height / 2;
-    tWidth = 60; //图例宽和高
-    tHeight = 20;
-    posX = cMargin;
-    posY = cMargin;   //
-    textX = posX + tWidth + 15
-    textY = posY + 18;
-    startAngle = endAngle = 90 * Math.PI / 180; //起始弧度 结束弧度
-    rotateAngle = 0; //整体旋转的弧度
-
-    //将传入的数据转化百分比
-    totleNb = 0;
-    new_data_arr = [];
-    for (var i = 0; i < dataArr.length; i++) {
-      totleNb += dataArr[i][0];
+    // 获得canvas上下文
+    canvas = document.getElementById("chart");
+    if (canvas && canvas.getContext) {
+        ctx = canvas.getContext("2d");
     }
-    for (var i = 0; i < dataArr.length; i++) {
-      new_data_arr.push(dataArr[i][0] / totleNb);
-    }
-    totalYNomber = 10;
-    // 运动相关
-    ctr = 1;//初始步骤
-    numctr = 50;//步骤
-    speed = 1.2; //毫秒 timer速度
+    initChart();
 
-    //指示线 和 文字
-    lineStartAngle = -startAngle;
-    line = 40;         //画线的时候超出半径的一段线长
-    textPadding = 10;  //文字与线之间的间距
-    textMoveDis = 200; //文字运动开始的间距
-  }
+    // 图表初始化
+    function initChart() {
+        // 图表信息
+        cMargin = 20;
+        cSpace = 40;
 
-  drawMarkers();
-  //绘制比例图及文字
-  function drawMarkers() {
-    ctx.textAlign = "left";
-    for (var i = 0; i < dataArr.length; i++) {
-      //绘制比例图及文字
-      ctx.fillStyle = dataArr[i][1];
-      ctx.fillRect(posX, posY + 40 * i, tWidth, tHeight);
-      ctx.moveTo(parseInt(posX)+0.5, parseInt(posY + 40 * i)+0.5);
-      ctx.font = 'normal 24px 微软雅黑';    //斜体 30像素 微软雅黑字体
-      ctx.fillStyle = dataArr[i][1]; //"#000000";
-      var percent = dataArr[i][2] + "：" + parseInt(100 * new_data_arr[i]) + "%";
-      ctx.fillText(percent, parseInt(textX)+0.5, parseInt(textY + 40 * i)+0.5);
-    }
-  };
+        canvas.width = canvas.parentNode.getAttribute("width") * 2;
+        canvas.height = canvas.parentNode.getAttribute("height") * 2;
+        canvas.style.height = canvas.height / 2 + "px";
+        canvas.style.width = canvas.width / 2 + "px";
+        cHeight = canvas.height - cMargin * 2;
+        cWidth = canvas.width - cMargin * 2;
 
-  //绘制动画
-  pieDraw();
-  function pieDraw(mouseMove) {
-
-    for (var n = 0; n < dataArr.length; n++) {
-      ctx.fillStyle = ctx.strokeStyle = dataArr[n][1];
-      ctx.lineWidth = 1;
-      var step = new_data_arr[n] * Math.PI * 2; //旋转弧度
-      var lineAngle = lineStartAngle + step / 2;   //计算线的角度
-      lineStartAngle += step;//结束弧度
-
-      ctx.beginPath();
-      var x0 = ox + radius * Math.cos(lineAngle),//圆弧上线与圆相交点的x坐标
-        y0 = oy + radius * Math.sin(lineAngle),//圆弧上线与圆相交点的y坐标
-        x1 = ox + (radius + line) * Math.cos(lineAngle),//圆弧上线与圆相交点的x坐标
-        y1 = oy + (radius + line) * Math.sin(lineAngle),//圆弧上线与圆相交点的y坐标
-        x2 = x1,//转折点的x坐标
-        y2 = y1,
-        linePadding = ctx.measureText(dataArr[n][2]).width + 10; //获取文本长度来确定折线的长度
-
-      ctx.moveTo(parseInt(x0)+0.5, parseInt(y0)+0.5);
-      //对x1/y1进行处理，来实现折线的运动
-      yMove = y0 + (y1 - y0) * ctr / numctr;
-      ctx.lineTo(parseInt(x1)+0.5, parseInt(yMove)+0.5);
-      if (x1 <= x0) {
-        x2 -= line;
-        ctx.textAlign = "right";
-        ctx.lineTo(parseInt(x2 - linePadding)+0.5, parseInt(yMove)+0.5);
-        ctx.fillText(dataArr[n][2], x2 - textPadding - textMoveDis * (numctr - ctr) / numctr, y2 - textPadding);
-      } else {
-        x2 += line;
-        ctx.textAlign = "left";
-        ctx.lineTo(parseInt(x2 + linePadding)+0.5, parseInt(yMove)+0.5);
-        ctx.fillText(dataArr[n][2], x2 + textPadding + textMoveDis * (numctr - ctr) / numctr, y2 - textPadding);
-      }
-
-      ctx.stroke();
-
-    }
-
-    //设置旋转
-    ctx.save();
-    ctx.translate(ox, oy);
-    ctx.rotate((Math.PI * 2 / numctr) * ctr / 2);
-
-    //绘制一个圆圈
-    ctx.strokeStyle = "rgba(0,0,0," + 0.5 * ctr / numctr + ")"
-    ctx.beginPath();
-    ctx.arc(0, 0, (radius + 20) * ctr / numctr, 0, Math.PI * 2, false);
-    ctx.stroke();
-
-    for (var j = 0; j < dataArr.length; j++) {
-
-      //绘制饼图
-      endAngle = endAngle + new_data_arr[j] * ctr / numctr * Math.PI * 2; //结束弧度
-
-      ctx.beginPath();
-      ctx.moveTo(0, 0); //移动到到圆心
-      ctx.arc(0, 0, radius * ctr / numctr, startAngle, endAngle, false); //绘制圆弧
-
-      ctx.fillStyle = dataArr[j][1];
-      if (mouseMove && ctx.isPointInPath(mousePosition.x * 2, mousePosition.y * 2)) {
-        ctx.globalAlpha = 0.8;
-      }
-
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = 1;
-
-      startAngle = endAngle; //设置起始弧度
-      if (j == dataArr.length - 1) {
+        //饼状图信息
+        radius = cHeight * 2 / 6;  //半径  高度的2/6
+        ox = canvas.width / 2 + cSpace;  //圆心
+        oy = canvas.height / 2;
+        tWidth = 60; //图例宽和高
+        tHeight = 20;
+        posX = cMargin;
+        posY = cMargin;   //
+        textX = posX + tWidth + 15
+        textY = posY + 18;
         startAngle = endAngle = 90 * Math.PI / 180; //起始弧度 结束弧度
-      }
+        rotateAngle = 0; //整体旋转的弧度
+
+        //将传入的数据转化百分比
+        totleNb = 0;
+        new_data_arr = [];
+        for (var i = 0; i < dataArr.length; i++) {
+            totleNb += dataArr[i][0];
+        }
+        for (var i = 0; i < dataArr.length; i++) {
+            new_data_arr.push(dataArr[i][0] / totleNb);
+        }
+        totalYNomber = 10;
+        // 运动相关
+        ctr = 1;//初始步骤
+        numctr = 50;//步骤
+        speed = 1.2; //毫秒 timer速度
+
+        //指示线 和 文字
+        lineStartAngle = -startAngle;
+        line = 40;         //画线的时候超出半径的一段线长
+        textPadding = 10;  //文字与线之间的间距
+        textMoveDis = 200; //文字运动开始的间距
     }
 
-    ctx.restore();
+    drawMarkers();
 
-    if (ctr < numctr) {
-      ctr++;
-      setTimeout(function () {
-        //ctx.clearRect(-canvas.width,-canvas.width,canvas.width*2, canvas.height*2);
-        ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2);
-        drawMarkers();
-        pieDraw();
-      }, speed *= 1.085);
-    }
-  }
-
-  //监听鼠标移动
-  var mouseTimer = null;
-  canvas.addEventListener("mousemove", function (e) {
-    e = e || window.event;
-    if (e.offsetX || e.offsetX == 0) {
-      mousePosition.x = e.offsetX;
-      mousePosition.y = e.offsetY;
-    } else if (e.layerX || e.layerX == 0) {
-      mousePosition.x = e.layerX;
-      mousePosition.y = e.layerY;
+    //绘制比例图及文字
+    function drawMarkers() {
+        ctx.textAlign = "left";
+        for (var i = 0; i < dataArr.length; i++) {
+            //绘制比例图及文字
+            ctx.fillStyle = dataArr[i][1];
+            ctx.fillRect(posX, posY + 40 * i, tWidth, tHeight);
+            ctx.moveTo(parseInt(posX) + 0.5, parseInt(posY + 40 * i) + 0.5);
+            ctx.font = 'normal 24px 微软雅黑';    //斜体 30像素 微软雅黑字体
+            ctx.fillStyle = dataArr[i][1]; //"#000000";
+            var percent = dataArr[i][2] + "：" + parseInt(100 * new_data_arr[i]) + "%";
+            ctx.fillText(percent, parseInt(textX) + 0.5, parseInt(textY + 40 * i) + 0.5);
+        }
     }
 
-    clearTimeout(mouseTimer);
-    mouseTimer = setTimeout(function () {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawMarkers();
-      pieDraw(true);
-    }, 10);
-  });
+    //绘制动画
+    pieDraw();
+
+    function pieDraw(mouseMove) {
+
+        for (var n = 0; n < dataArr.length; n++) {
+            ctx.fillStyle = ctx.strokeStyle = dataArr[n][1];
+            ctx.lineWidth = 1;
+            var step = new_data_arr[n] * Math.PI * 2; //旋转弧度
+            var lineAngle = lineStartAngle + step / 2;   //计算线的角度
+            lineStartAngle += step;//结束弧度
+
+            ctx.beginPath();
+            var x0 = ox + radius * Math.cos(lineAngle),//圆弧上线与圆相交点的x坐标
+                y0 = oy + radius * Math.sin(lineAngle),//圆弧上线与圆相交点的y坐标
+                x1 = ox + (radius + line) * Math.cos(lineAngle),//圆弧上线与圆相交点的x坐标
+                y1 = oy + (radius + line) * Math.sin(lineAngle),//圆弧上线与圆相交点的y坐标
+                x2 = x1,//转折点的x坐标
+                y2 = y1,
+                linePadding = ctx.measureText(dataArr[n][2]).width + 10; //获取文本长度来确定折线的长度
+
+            ctx.moveTo(parseInt(x0) + 0.5, parseInt(y0) + 0.5);
+            //对x1/y1进行处理，来实现折线的运动
+            yMove = y0 + (y1 - y0) * ctr / numctr;
+            ctx.lineTo(parseInt(x1) + 0.5, parseInt(yMove) + 0.5);
+            if (x1 <= x0) {
+                x2 -= line;
+                ctx.textAlign = "right";
+                ctx.lineTo(parseInt(x2 - linePadding) + 0.5, parseInt(yMove) + 0.5);
+                ctx.fillText(dataArr[n][2], x2 - textPadding - textMoveDis * (numctr - ctr) / numctr, y2 - textPadding);
+            } else {
+                x2 += line;
+                ctx.textAlign = "left";
+                ctx.lineTo(parseInt(x2 + linePadding) + 0.5, parseInt(yMove) + 0.5);
+                ctx.fillText(dataArr[n][2], x2 + textPadding + textMoveDis * (numctr - ctr) / numctr, y2 - textPadding);
+            }
+
+            ctx.stroke();
+
+        }
+
+        //设置旋转
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.rotate((Math.PI * 2 / numctr) * ctr / 2);
+
+        //绘制一个圆圈
+        ctx.strokeStyle = "rgba(0,0,0," + 0.5 * ctr / numctr + ")"
+        ctx.beginPath();
+        ctx.arc(0, 0, (radius + 20) * ctr / numctr, 0, Math.PI * 2, false);
+        ctx.stroke();
+
+        for (var j = 0; j < dataArr.length; j++) {
+
+            //绘制饼图
+            endAngle = endAngle + new_data_arr[j] * ctr / numctr * Math.PI * 2; //结束弧度
+
+            ctx.beginPath();
+            ctx.moveTo(0, 0); //移动到到圆心
+            ctx.arc(0, 0, radius * ctr / numctr, startAngle, endAngle, false); //绘制圆弧
+
+            ctx.fillStyle = dataArr[j][1];
+            if (mouseMove && ctx.isPointInPath(mousePosition.x * 2, mousePosition.y * 2)) {
+                ctx.globalAlpha = 0.8;
+            }
+
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            startAngle = endAngle; //设置起始弧度
+            if (j == dataArr.length - 1) {
+                startAngle = endAngle = 90 * Math.PI / 180; //起始弧度 结束弧度
+            }
+        }
+
+        ctx.restore();
+
+        if (ctr < numctr) {
+            ctr++;
+            setTimeout(function () {
+                //ctx.clearRect(-canvas.width,-canvas.width,canvas.width*2, canvas.height*2);
+                ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2);
+                drawMarkers();
+                pieDraw();
+            }, speed *= 1.085);
+        }
+    }
+
+    //监听鼠标移动
+    var mouseTimer = null;
+    canvas.addEventListener("mousemove", function (e) {
+        e = e || window.event;
+        if (e.offsetX || e.offsetX == 0) {
+            mousePosition.x = e.offsetX;
+            mousePosition.y = e.offsetY;
+        } else if (e.layerX || e.layerX == 0) {
+            mousePosition.x = e.layerX;
+            mousePosition.y = e.layerY;
+        }
+
+        clearTimeout(mouseTimer);
+        mouseTimer = setTimeout(function () {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMarkers();
+            pieDraw(true);
+        }, 10);
+    });
 
 }
 
 function load() {
-  let el_wrapper = document.getElementById('wrapper');
-  document.getElementById('lang-cn').onclick = function () {
-    el_wrapper.className = 'lang-cn';
-    goChart(chartData_cn);
-  };
-  document.getElementById('lang-en').onclick = function () {
-    el_wrapper.className = 'lang-en';
-    goChart(chartData_en);
-  };
+    let el_wrapper = document.getElementById('wrapper');
+    document.getElementById('lang-cn').onclick = function () {
+        el_wrapper.className = 'lang-cn';
+        goChart(chartData_cn);
+    };
+    document.getElementById('lang-en').onclick = function () {
+        el_wrapper.className = 'lang-en';
+        goChart(chartData_en);
+    };
 
-  let nav_lang = (location.hash || '').replace(/#/, '');
-  if (nav_lang === 'cn' || nav_lang === 'en') {
-    el_wrapper.className = 'lang-' + nav_lang;
-  }
+    let nav_lang = (location.hash || '').replace(/#/, '');
+    if (nav_lang === 'cn' || nav_lang === 'en') el_wrapper.className = 'lang-' + nav_lang;
 
-  let images = document.getElementsByClassName("pic");
-  let lens = images.length;
-  let popup = document.getElementById("popup");
+    let images = document.getElementsByClassName("pic");
+    let lens = images.length;
+    let popup = document.getElementById("popup");
 
-  function show(event) {
-    event = event || window.event;
-    let target = document.elementFromPoint(event.clientX, event.clientY);
-    showBig(target.src, target.title, target.alt);
-  }
+    function showBig(src, title, alt) {
+        document.getElementById("popup-img").setAttribute("src", src)
+        document.getElementById("popup-img").setAttribute("title", title)
+        document.getElementById("popup-img").setAttribute("alt", alt)
+        popup.style.display = "block";
+        popup.style.zIndex = "999999";
+    }
 
-  for (let i = 0; i < lens; i++) {
-    images[i].onclick = show;
-  }
-  popup.onclick = function () {
-    popup.getElementsByTagName("img")[0].src = "";
-    popup.getElementsByTagName("img")[0].title = "";
-    popup.getElementsByTagName("img")[0].alt = "";
-    popup.style.display = "none";
-    popup.style.zIndex = "-1";
-  };
+    function show(event) {
+        event = event || window.event;
+        let target = document.elementFromPoint(event.clientX, event.clientY);
+        showBig(target.src, target.title, target.alt);
+    }
 
-  function showBig(src, title, alt) {
-    popup.getElementsByTagName("img")[0].src = src;
-    popup.getElementsByTagName("img")[0].title = title;
-    popup.getElementsByTagName("img")[0].alt = alt;
-    popup.style.display = "block";
-    popup.style.zIndex = "999999";
-  }
+    for (let i = 0; i < lens; i++) images[i].onclick = show;
 
-  draw()
+    popup.onclick = function () {
+        document.getElementById("popup-img").removeAttribute("src")
+        document.getElementById("popup-img").removeAttribute("title")
+        document.getElementById("popup-img").removeAttribute("alt")
+        popup.style.display = "none";
+        popup.style.zIndex = "-1";
+    };
+
+
+    [].forEach.call(document.querySelectorAll('img.pic[data-src]'), function (img) {
+        img.setAttribute('src', img.getAttribute('data-src'));
+        img.onload = function () {
+            img.removeAttribute('data-src');
+        };
+    });
+
+    draw()
 }
 """
 
     STYLESHEET_TMPL = """
-    body {
+body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     font-size: 14px;
 }
@@ -558,19 +564,19 @@ a.popup_link:hover {
 }
 
 .passCase {
-  background-color: #d0e9c6
+    background-color: #d0e9c6
 }
 
 .failCase {
-  background-color: #ebcccc
+    background-color: #ebcccc
 }
 
 .errorCase {
-  background-color: #faf2cc
+    background-color: #faf2cc
 }
 
 .skipCase {
-  background-color: #c4e3f3
+    background-color: #c4e3f3
 }
 
 .hiddenRow {
@@ -614,6 +620,12 @@ img.pic {
     height: auto;
     max-width: 100%;
     max-height: 100%;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+img.pic[data-src] {
+    opacity: 0;
 }
 
 #wrapper {
@@ -892,7 +904,7 @@ tr {
                 <a onfocus='this.blur();'>[x]</a>
             </div>
             <pre>{script}</pre>
-            <div><ul class='figure_ul'>{img}<ul></div>
+            <div><ul class='figure_ul'>{img}</ul></div>
         </div>
     </td>
 </tr>"""
@@ -911,7 +923,7 @@ tr {
 
     REPORT_IMG_TMPL = r"""<li class="figure_li">
     <figure>
-        <img class="pic" src='{img_src}' title='{alt}' alt='{title}'/>
+        <img class="pic" data-src='{img_src}' title='{alt}' alt='{title}'/>
     </figure>
     {title}
 </li>
