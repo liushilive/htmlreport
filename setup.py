@@ -18,10 +18,12 @@ setup(
     long_description_content_type="text/markdown",
     author=__author__,
     author_email="liushilive@outlook.com",
-    url="http://liushilive.github.io",
+    url="https://github.com/liushilive/htmlreport",
     project_urls={
+        "issues": "https://github.com/liushilive/htmlreport/issues",
         "The report template": "https://liushilive.github.io/report/report/#en",
-        "报告样板": "https://liushilive.github.io/report/report/#cn"
+        "报告样板": "https://liushilive.github.io/report/report/#cn",
+        "个人主页": "https://liushilive.github.io/"
     },
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_dir={"HTMLReport": "HTMLReport"},
