@@ -928,3 +928,20 @@ tr {
     {title}
 </li>
 """
+
+    REPORT_XML_TMPL = r"""<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="{name}" errors="{errors}" failures="{failures}" tests="{tests}" skipped="{skipped}" time="{time}" >
+{testsuite}</testsuites>
+"""
+    REPORT_XML_TS_TMPL = r"""    <testsuite name="{name}" id="{id}" errors="{errors}" skipped="{skipped}" tests="{tests}" failures="{failures}" time="{time}">
+{testcase}    </testsuite>
+"""
+    REPORT_XML_TC_TMPL = r"""        <testcase name="{name}" classname="{classname}" time="{time}">
+{status}        </testcase>
+"""
+    REPORT_XML_TC_SKIPPED_TMPL = """            <skipped/>
+"""
+    REPORT_XML_TC_FAILURE_TMPL = """            <failure/>
+"""
+    REPORT_XML_TC_ERROR_TMPL = """            <error/>
+"""

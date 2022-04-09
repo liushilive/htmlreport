@@ -48,7 +48,6 @@ class Result(TestResult):
         self.tries, self.delay, self.back_off, self.max_delay, self.retry, = tries, delay, back_off, max_delay, retry
         self.thread_start_wait = thread_start_wait
         """
-        返回结果是一个5个属性的字典的列表
         (
           result_code (0: success; 1: fail; 2: error; 3: skip),
           testCase_object,
@@ -81,7 +80,8 @@ class Result(TestResult):
                 tries=0,
                 retry=True,
                 style={},
-                local_delay=self.delay
+                local_delay=self.delay,
+                duration=0
             )
 
         self.time[str(threading.current_thread().ident)] = time.time()
@@ -89,10 +89,11 @@ class Result(TestResult):
 
     def stopTest(self, test):
         end_time = time.time()
+        duration = end_time - self.time[str(threading.current_thread().ident)]
         logging.info((self.LANG == "cn" and "测试结束： {}" or "Stop Test: {}").format(test))
-        logging.info((self.LANG == "cn" and "耗时： {}" or "Duration: {}").format(
-            end_time - self.time[str(threading.current_thread().ident)]))
+        logging.info((self.LANG == "cn" and "耗时： {}" or "Duration: {}").format(duration))
         current_id = str(threading.current_thread().ident)
+        self.result_tmp[current_id]["duration"] += duration
         tries = self.result_tmp[current_id]["tries"]
         if current_id in save_images.imageList:
             tmp = save_images.imageList.pop(current_id)

@@ -88,12 +88,14 @@ class TestRunner(TemplateMixin, TestSuite):
 
         random_name = f"test_{time.strftime('%Y_%m_%d_%H_%M_%S')}_{random.randint(1, 999)}"
         report_name = f'{report_file_name or random_name}.html'
-
+        report_xml_name = f'{report_file_name or random_name}.xml'
         self.log_name = f"{log_file_name or report_file_name or random_name}.log"
-        self.path_file = os.path.join(dir_to, report_name)
-        self.log_file_name = os.path.join(dir_to, self.log_name)
 
-        logging.getLogger().addHandler(HandlerFactory.get_rotating_file_handler(self.log_file_name))
+        self.path_report_file = os.path.join(dir_to, report_name)
+        self.path_report_xml_file = os.path.join(dir_to, report_xml_name)
+        self.path_log_file = os.path.join(dir_to, self.log_name)
+
+        logging.getLogger().addHandler(HandlerFactory.get_rotating_file_handler(self.path_log_file))
 
         self.stopTime = self.startTime = datetime.datetime.now()
 
@@ -226,12 +228,13 @@ class TestRunner(TemplateMixin, TestSuite):
             i = dic.get("image_paths")
             r = dic.get("tries")
             s = dic.get("style")
+            d = dic.get("duration")
 
             cls = t.__class__
             if cls not in remap:
                 remap[cls] = []
                 classes.append(cls)
-            remap[cls].append((n, t, o, i, r, s))
+            remap[cls].append((n, t, o, i, r, s, d))
 
         result = []
         for cls in classes:
@@ -246,11 +249,11 @@ class TestRunner(TemplateMixin, TestSuite):
         stylesheet = self._generate_stylesheet()
         heading = self._generate_heading(result)
         log_file = self._generate_log(self.log_name)
-        report = self._create_report(result)
+        report, report_xml = self._create_report(result)
 
         ending = self._generate_ending()
         js = self._generate_js(result)
-        output = self.HTML_TMPL.format(
+        output_html = self.HTML_TMPL.format(
             title=saxutils.escape(self.title),
             generator=generator,
             stylesheet=stylesheet,
@@ -262,8 +265,10 @@ class TestRunner(TemplateMixin, TestSuite):
             ending=ending
         )
 
-        with open(self.path_file, "w", encoding="utf8") as report_file:
-            report_file.write(output)
+        with open(self.path_report_file, "w", encoding="utf8") as report_file:
+            report_file.write(output_html)
+        with open(self.path_report_xml_file, "w", encoding="utf-8") as report_xml_file:
+            report_xml_file.write(report_xml)
 
     def _generate_stylesheet(self):
         return self.STYLESHEET_TMPL
@@ -285,11 +290,12 @@ class TestRunner(TemplateMixin, TestSuite):
 
     def _create_report(self, result):
         rows = []
+        ts_xml = []
         nrs = 0
         sorted_result = self._sort_result(result.result)
         for cid, (cls, cls_results) in enumerate(sorted_result):
-            np = nf = ne = ns = nr = 0
-            for n, t, o, i, r, s in cls_results:
+            np = nf = ne = ns = nr = nd = 0
+            for n, t, o, i, r, s, d in cls_results:
                 if n == 0:
                     np += 1
                 elif n == 1:
@@ -299,6 +305,7 @@ class TestRunner(TemplateMixin, TestSuite):
                 elif n == 3:
                     ns += 1
                 nr += r
+                nd += d
             nrs += nr
 
             # 格式化类描述
@@ -322,10 +329,13 @@ class TestRunner(TemplateMixin, TestSuite):
                 cid=f"c{cid + 1}",
             )
             rows.append(row)
-
-            for tid, (n, t, o, i, r, s) in enumerate(cls_results):
-                self._generate_report_test(rows, cid, tid, n, t, o, i, r, s)
-
+            tc_xml = []
+            for tid, (n, t, o, i, r, s, d) in enumerate(cls_results):
+                self._generate_report_test(rows, tc_xml, cid, tid, n, t, o, i, r, s, d)
+            ts_xml.append(self.REPORT_XML_TS_TMPL.format(
+                name=name, id=cid, errors=ne, skipped=ns, tests=count, failures=nf, time=nd,
+                testcase="".join(tc_xml)
+            ))
         count = result.success_count + result.failure_count + result.error_count + result.skip_count
         report = self.REPORT_TMPL.format(
             test_list="".join(rows),
@@ -337,9 +347,18 @@ class TestRunner(TemplateMixin, TestSuite):
             tries=nrs,
             statistics=result.success_count / (count == 0 and 1 or count)
         )
-        return report
+        report_xml = self.REPORT_XML_TMPL.format(
+            name=saxutils.escape(self.title),
+            errors=result.error_count,
+            failures=result.failure_count,
+            tests=count,
+            skipped=result.skip_count,
+            time=(self.stopTime - self.startTime).total_seconds(),
+            testsuite="".join(ts_xml)
+        )
+        return report, report_xml
 
-    def _generate_report_test(self, rows, cid, tid, n, t, o, i, r, s):
+    def _generate_report_test(self, rows, tc_xml, cid, tid, n, t, o, i, r, s, d):
         # 0: success; 1: fail; 2: error; 3: skip
         tid = (n == 0 and "p" or n == 3 and "s" or n == 2 and "e" or "f") + f"t{cid + 1}.{tid + 1}"
         name = t.id().split(".")[-1]
@@ -359,6 +378,13 @@ class TestRunner(TemplateMixin, TestSuite):
             tries=r
         )
         rows.append(row)
+        tc_xml.append(self.REPORT_XML_TC_TMPL.format(
+            name=name,
+            classname=t.id(),
+            time=d,
+            status=(n == 1 and self.REPORT_XML_TC_FAILURE_TMPL or n == 2 and self.REPORT_XML_TC_ERROR_TMPL
+                    or n == 3 and self.REPORT_XML_TC_SKIPPED_TMPL or "")
+        ))
 
         for x in range(0, r + 1):
             img_list = ""
