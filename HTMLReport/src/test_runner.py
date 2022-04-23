@@ -28,7 +28,7 @@ from HTMLReport import __author__, __version__
 from .tools import save_images
 from .tools.log.handler_factory import HandlerFactory
 from .tools.result import Result
-from .tools.template import TemplateMixin
+from .tools.template import TemplateMixin, ResultStatus
 
 
 def _isnotsuite(test):
@@ -50,7 +50,7 @@ class TestRunner(TemplateMixin, TestSuite):
     def __init__(self, report_file_name: str = None, log_file_name: str = None, output_path: str = None,
                  title: str = None, description: str = None, tries: int = 0, delay: float = 1, back_off: float = 1,
                  max_delay: float = 120, retry: bool = True, thread_count: int = 1, thread_start_wait: float = 0,
-                 sequential_execution: bool = False, lang: str = "cn"):
+                 sequential_execution: bool = False, lang: str = "cn", image: bool = True, failed_image: bool = False):
         """测试执行器
 
         :param report_file_name: 报告文件名，如果未赋值，将采用“test+时间戳”
@@ -68,6 +68,8 @@ class TestRunner(TemplateMixin, TestSuite):
         :param sequential_execution: 是否按照套件添加(addTests)顺序执行， 会等待一个addTests执行完成，再执行下一个，默认 False。
                 如果用例中存在 tearDownClass ，建议设置为True，否则 tearDownClass 将会在所有用例线程执行完后才会执行。
         :param lang: ("cn", "en") 支持中文与英文报告输出，默认采用中文
+        :param image: 默认支持添加图片，False 放弃所有图片添加
+        :param failed_image: true 只有失败才添加图片，成功用例添加的图片会被删除
         """
         super().__init__()
         self.LANG = lang in ("cn", "en") and lang or "cn"
@@ -81,6 +83,8 @@ class TestRunner(TemplateMixin, TestSuite):
         self.thread_start_wait = thread_start_wait
         self.sequential_execution = sequential_execution
 
+        save_images.image = image
+        self.failed_image = failed_image
         save_images.report_path = report_path = os.path.join(output_path or "report")
         dir_to = os.path.join(os.getcwd(), report_path)
         if not os.path.exists(dir_to):
@@ -153,7 +157,7 @@ class TestRunner(TemplateMixin, TestSuite):
             logging.getLogger().setLevel(logging.DEBUG)
 
         result = Result(self.LANG, self.tries, self.delay, self.back_off, self.max_delay, self.retry,
-                        self.thread_start_wait)
+                        self.thread_start_wait, self.failed_image)
         if self.LANG == "cn":
             logging.info(f"预计并发线程数：{str(self.thread_count)}")
         else:
@@ -296,13 +300,13 @@ class TestRunner(TemplateMixin, TestSuite):
         for cid, (cls, cls_results) in enumerate(sorted_result):
             np = nf = ne = ns = nr = nd = 0
             for n, t, o, i, r, s, d in cls_results:
-                if n == 0:
+                if n == ResultStatus.PASS:
                     np += 1
-                elif n == 1:
+                elif n == ResultStatus.FAIL:
                     nf += 1
-                elif n == 2:
+                elif n == ResultStatus.ERROR:
                     ne += 1
-                elif n == 3:
+                elif n == ResultStatus.SKIP:
                     ns += 1
                 nr += r
                 nd += d
@@ -317,7 +321,10 @@ class TestRunner(TemplateMixin, TestSuite):
             desc = doc and f"{name}: {doc}" or name
             count = np + nf + ne + ns
             row = self.REPORT_CLASS_TMPL.format(
-                style=ne > 0 and "errorClass" or nf > 0 and "failClass" or np > 0 and "passClass" or "skipClass",
+                style=ne > 0 and ResultStatus.ERROR.r_class
+                      or nf > 0 and ResultStatus.FAIL.r_class
+                      or np > 0 and ResultStatus.PASS.r_class
+                      or ResultStatus.SKIP.r_class,
                 desc=desc,
                 count=count,
                 Pass=np,
@@ -358,9 +365,8 @@ class TestRunner(TemplateMixin, TestSuite):
         )
         return report, report_xml
 
-    def _generate_report_test(self, rows, tc_xml, cid, tid, n, t, o, i, r, s, d):
-        # 0: success; 1: fail; 2: error; 3: skip
-        tid = (n == 0 and "p" or n == 3 and "s" or n == 2 and "e" or "f") + f"t{cid + 1}.{tid + 1}"
+    def _generate_report_test(self, rows, tc_xml, cid, tid, n: ResultStatus, t, o, i, r, s: dict[int, ResultStatus], d):
+        tid = f"{n.r_tid}t{cid + 1}.{tid + 1}"
         name = t.id().split(".")[-1]
         doc = "_testMethodDoc" in t.__dir__() and t.__getattribute__("_testMethodDoc") or ""
         doc = doc.strip().split("\n")[0]
@@ -369,11 +375,10 @@ class TestRunner(TemplateMixin, TestSuite):
         row = self.REPORT_TEST_WITH_OUTPUT_TMPL.format(
             tid=tid,
             tid1=r == 0 and tid + ".1" or tid,
-            style=(n == 0 and "passCase" or n == 2 and "errorCase" or
-                   n == 1 and "failCase" or n == 3 and "skipCase" or "none"),
+            style=n.r_ts,
             desc=desc,
-            status_cn=self.STATUS_cn[n],
-            status_en=self.STATUS_en[n],
+            status_cn=n.r_cn,
+            status_en=n.r_en,
             count=r + 1,
             tries=r
         )
@@ -382,8 +387,7 @@ class TestRunner(TemplateMixin, TestSuite):
             name=name,
             classname=t.id(),
             time=d,
-            status=(n == 1 and self.REPORT_XML_TC_FAILURE_TMPL or n == 2 and self.REPORT_XML_TC_ERROR_TMPL
-                    or n == 3 and self.REPORT_XML_TC_SKIPPED_TMPL or "")
+            status=n.r_xml_tc
         ))
 
         for x in range(0, r + 1):
@@ -405,14 +409,14 @@ class TestRunner(TemplateMixin, TestSuite):
                 )
                 rows.append(row)
             else:
+                rs = s.get(x)
                 row = self.REPORT_TEST_WITH_OUTPUT_SUB_RETRY_TMPL.format(
                     tid=tid,
                     r=x + 1,
-                    style=(s.get(x) == 0 and "passCase" or s.get(x) == 2 and "errorCase" or
-                           s.get(x) == 1 and "failCase" or s.get(x) == 3 and "skipCase" or "none"),
+                    style=rs.r_ts,
                     n=x + 1,
-                    status_cn=self.STATUS_cn[s.get(x)],
-                    status_en=self.STATUS_en[s.get(x)],
+                    status_cn=rs.r_cn,
+                    status_en=rs.r_en,
                     count=r + 1
                 )
                 rows.append(row)
@@ -431,18 +435,19 @@ class TestRunner(TemplateMixin, TestSuite):
     def _generate_js(self, result):
         chart_data_cn = []
         chart_data_en = []
+
         if result.success_count:
-            chart_data_cn.append([result.success_count, "#1c965b", "通过"])
-            chart_data_en.append([result.success_count, "#1c965b", "Passed"])
+            chart_data_cn.append([result.success_count, ResultStatus.PASS.r_color, ResultStatus.PASS.r_cn])
+            chart_data_en.append([result.success_count, ResultStatus.PASS.r_color, ResultStatus.PASS.r_en])
         if result.failure_count:
-            chart_data_cn.append([result.failure_count, "#ff5722", "失败"])
-            chart_data_en.append([result.failure_count, "#ff5722", "Failed"])
+            chart_data_cn.append([result.failure_count, ResultStatus.FAIL.r_color, ResultStatus.FAIL.r_cn])
+            chart_data_en.append([result.failure_count, ResultStatus.FAIL.r_color, ResultStatus.FAIL.r_en])
         if result.error_count:
-            chart_data_cn.append([result.error_count, "#ff9800", "错误"])
-            chart_data_en.append([result.error_count, "#ff9800", "Error"])
+            chart_data_cn.append([result.error_count, ResultStatus.ERROR.r_color, ResultStatus.ERROR.r_cn])
+            chart_data_en.append([result.error_count, ResultStatus.ERROR.r_color, ResultStatus.ERROR.r_en])
         if result.skip_count:
-            chart_data_cn.append([result.skip_count, "#64b5f6", "跳过"])
-            chart_data_en.append([result.skip_count, "#64b5f6", "Skipped"])
+            chart_data_cn.append([result.skip_count, ResultStatus.SKIP.r_color, ResultStatus.SKIP.r_cn])
+            chart_data_en.append([result.skip_count, ResultStatus.SKIP.r_color, ResultStatus.SKIP.r_en])
 
         _data = f"""
 var chartData_cn = {chart_data_cn};

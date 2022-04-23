@@ -64,7 +64,7 @@ class _StreamHandler(Handler):
             # issue 35046: merged two stream.writes into one.
             stream.write(msg + self.terminator)
             self.flush()
-        except Exception:
+        except:
             self.handleError(record)
 
     def __repr__(self):

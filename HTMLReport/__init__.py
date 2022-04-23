@@ -21,12 +21,12 @@ from .src.tools.log.handler_factory import HandlerFactory
 
 __author__ = '刘士'
 # __version__ = '2.0.6a'
-__version__ = '2.3.0'
+__version__ = '2.3.1'
 
 from .src.test_runner import TestRunner
 from .src.tools import data_driven as ddt
 from .src.tools.retry_on_exception import retry, no_retry
-from .src.tools.save_images import addImage
+from .src.tools.save_images import add_image
 
 for handler in logging.getLogger().handlers:
     handler: logging
@@ -39,7 +39,7 @@ logging.getLogger().addHandler(HandlerFactory.get_std_err_handler())
 logging.getLogger().addHandler(HandlerFactory.get_stream_handler())
 
 __all__ = [
-    "addImage",
+    "add_image",
     "TestRunner",
     "ddt",
     "retry",

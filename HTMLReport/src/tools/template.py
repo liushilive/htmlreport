@@ -13,23 +13,11 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 """
+from enum import Enum, unique
 
 
 class TemplateMixin(object):
     # 定义生成HTML结果文件所需要的模板。
-
-    STATUS_cn = {
-        0: "通过",
-        1: "失败",
-        2: "错误",
-        3: "跳过",
-    }
-    STATUS_en = {
-        0: "pass",
-        1: "fail",
-        2: "error",
-        3: "skip",
-    }
 
     DEFAULT_TITLE = "测试报告"
     DEFAULT_TITLE_en = "Test Results"
@@ -766,7 +754,7 @@ tr {
     </a>
     <a href='javascript:showCase(2)'>
         <span class="lang-cn">失败</span>
-        <span class="lang-en">Fail</span>
+        <span class="lang-en">FAIL</span>
     </a>
     <a href='javascript:showCase(5)'>
         <span class="lang-cn">异常</span>
@@ -945,3 +933,54 @@ tr {
 """
     REPORT_XML_TC_ERROR_TMPL = """            <error/>
 """
+
+
+@unique
+class ResultStatus(Enum):
+    """测试结果状态"""
+    # PASS = 0, "passClass"
+    # FAIL = 1, "failClass"
+    # ERROR = 2, "errorClass"
+    # SKIP = 3, "skipClass"
+
+    PASS = "passClass", "p", "passCase", "通过", "pass", "", "#1c965b"
+    FAIL = "failClass", "f", "failCase", "失败", "fail", TemplateMixin.REPORT_XML_TC_FAILURE_TMPL, "#ff5722"
+    ERROR = "errorClass", "e", "errorCase", "错误", "error", TemplateMixin.REPORT_XML_TC_ERROR_TMPL, "#ff9800"
+    SKIP = "skipClass", "s", "skipCase", "跳过", "skip", TemplateMixin.REPORT_XML_TC_SKIPPED_TMPL, "#64b5f6"
+
+    def __init__(self, r_class, r_tid, r_ts, cn, en, xml_tc, r_color):
+        self._r_class = r_class
+        self._r_tid = r_tid
+        self._r_ts = r_ts
+        self._r_cn = cn
+        self._r_en = en
+        self._r_xml_tc = xml_tc
+        self._r_color = r_color
+
+    @property
+    def r_class(self) -> str:
+        return self._r_class
+
+    @property
+    def r_tid(self) -> str:
+        return self._r_tid
+
+    @property
+    def r_ts(self) -> str:
+        return self._r_ts
+
+    @property
+    def r_cn(self) -> str:
+        return self._r_cn
+
+    @property
+    def r_en(self) -> str:
+        return self._r_en
+
+    @property
+    def r_xml_tc(self) -> str:
+        return self._r_xml_tc
+
+    @property
+    def r_color(self) -> str:
+        return self._r_color

@@ -18,8 +18,7 @@
 pip install HTMLReport
 ```
 
-这是安装HTMLReport的首选方法，因为它将始终安装最新的稳定版本。
-如果您没有安装 [pip](https://pip.pypa.io/)，
+这是安装HTMLReport的首选方法，因为它将始终安装最新的稳定版本。 如果您没有安装 [pip](https://pip.pypa.io/)，
 则该 [Python安装指南](http://docs.python-guide.org/en/latest/starting/installation/ "Python安装指南")
 可以指导您完成该过程。
 
@@ -49,11 +48,11 @@ logging.critical("测试")
 
 ```python
 import base64
-from HTMLReport import addImage
+from HTMLReport import add_image
 
 with open("baidu.png", 'rb') as f:
     image = base64.b64encode(f.read())
-    addImage(image, "图片标题", "图片描述")
+    add_image(image, "图片标题", "图片描述")
 ```
 
 ### 失败重试
@@ -62,7 +61,7 @@ with open("baidu.png", 'rb') as f:
 
 ### 数据驱动
 
-测试类前加入装饰器 `@ddt.ddt` 
+测试类前加入装饰器 `@ddt.ddt`
 
 测试方法前加入装饰器 `@ddt.data(*data)`
 
@@ -74,7 +73,7 @@ import logging
 import random
 import unittest
 
-from HTMLReport import ddt, TestRunner, addImage, no_retry, retry
+from HTMLReport import ddt, TestRunner, add_image, no_retry, retry
 
 
 class TestOne(unittest.TestCase):
@@ -136,7 +135,7 @@ class TestOne(unittest.TestCase):
             image = base64.b64encode(f.read())
             alt = """百度一下，你就知道了。"""
             for i in range(5):
-                addImage(image, f"百度 {i}", alt)
+                add_image(image, f"百度 {i}", alt)
 
 
 @ddt.ddt
@@ -246,7 +245,7 @@ if __name__ == '__main__':
 
 ```
 
->如果您有其他的需求，请发邮件给我：<liushilive@outlook.com> ， 祝您使用愉快！
+> 如果您有其他的需求，请发邮件给我：<liushilive@outlook.com> ， 祝您使用愉快！
 
 Links:
 

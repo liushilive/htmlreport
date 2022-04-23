@@ -19,12 +19,14 @@ import os
 import random
 import threading
 import time
+from typing import Union
 
 report_path = ""
-imageList = {}
+image_list = {}
+image = True
 
 
-def addImage(base64_data: bytes, title: str = "", describe: str = ""):
+def add_image(base64_data: Union[bytes, str], title: str = "", describe: str = ""):
     """添加截图到报告
 
     :param base64_data: base64格式的图片文本
@@ -32,21 +34,26 @@ def addImage(base64_data: bytes, title: str = "", describe: str = ""):
     :param describe: 图片提示
     :return: None
     """
+
+    if not image or not base64_data or not report_path:
+        return
+
     try:
-        if base64_data and report_path:
-            current_id = str(threading.current_thread().ident)
-            if current_id not in imageList:
-                imageList[current_id] = []
+        current_id = str(threading.current_thread().ident)
+        if current_id not in image_list:
+            image_list[current_id] = []
 
-            random_name = f"image_{current_id}_{time.strftime('%Y_%m_%d_%H_%M_%S')}_{random.randint(1, 999)}.jpg"
+        random_name = f"image_{current_id}_{time.strftime('%Y_%m_%d_%H_%M_%S')}_{random.randint(1, 999)}.jpg"
 
-            image_path = os.path.join(report_path, "images")
-            if not os.path.exists(image_path):
-                os.makedirs(image_path)
+        image_path = os.path.join(report_path, "images")
+        if not os.path.exists(image_path):
+            os.makedirs(image_path)
 
-            image_file = os.path.join(image_path, random_name)
-            with open(image_file, "wb") as f:
-                f.write(base64.b64decode(base64_data))
-                imageList[current_id].append((os.path.join('images', random_name).replace("\\", "/"), describe, title))
+        image_file = os.path.join(image_path, random_name)
+        with open(image_file, "wb") as f:
+            f.write(base64.b64decode(base64_data))
+            image_list[current_id].append(
+                (os.path.join('images', random_name).replace("\\", "/"), describe, title, image_file)
+            )
     except Exception as e:
         logging.error(f"保存截图失败\n{e}")

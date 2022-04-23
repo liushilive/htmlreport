@@ -3,7 +3,7 @@ import logging
 import random
 import unittest
 
-from HTMLReport import ddt, TestRunner, addImage, no_retry, retry
+from HTMLReport import ddt, TestRunner, add_image, no_retry, retry
 
 
 class TestOne(unittest.TestCase):
@@ -65,7 +65,7 @@ class TestOne(unittest.TestCase):
             image = base64.b64encode(f.read())
             alt = """百度一下，你就知道了。"""
             for i in range(5):
-                addImage(image, f"百度 {i}", alt)
+                add_image(image, f"百度 {i}", alt)
 
 
 @ddt.ddt
@@ -112,6 +112,12 @@ class TestRetry(unittest.TestCase):
     @retry
     @ddt.data(*range(3))
     def test_a(self, n):
+        with open("baidu.png", 'rb') as f:
+            image = base64.b64encode(f.read())
+            alt = """百度一下，你就知道了。"""
+            for i in range(5):
+                add_image(image, f"百度 {i}", alt)
+
         self.assertEqual(n, random.randint(0, 2))
 
     def test_b(self, n):

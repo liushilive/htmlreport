@@ -14,6 +14,7 @@ License for the specific language governing permissions and limitations
 under the License.
 """
 import logging
+import os
 import threading
 import time
 from io import StringIO
@@ -22,6 +23,7 @@ from unittest import TestResult, TestCase
 from . import save_images
 from .log.handler_factory import HandlerFactory
 from .retry_on_exception import no_retry_lists, retry_lists
+from .template import ResultStatus
 
 
 class Result(TestResult):
@@ -30,7 +32,7 @@ class Result(TestResult):
     这里重写了 unittest.TestResult 的多个方法，比如 startTest(self, test) 等等
     """
 
-    def __init__(self, lang, tries, delay, back_off, max_delay, retry, thread_start_wait):
+    def __init__(self, lang, tries, delay, back_off, max_delay, retry, thread_start_wait, failed_image):
         super().__init__()
         self.success_count = 0
         self.failure_count = 0
@@ -47,9 +49,10 @@ class Result(TestResult):
         self.LANG = lang
         self.tries, self.delay, self.back_off, self.max_delay, self.retry, = tries, delay, back_off, max_delay, retry
         self.thread_start_wait = thread_start_wait
+        self.failed_image = failed_image
         """
         (
-          result_code (0: success; 1: fail; 2: error; 3: skip),
+          result_code ResultStatus,
           testCase_object,
           test_output dict(list(string)),
           image_paths dict,
@@ -73,7 +76,7 @@ class Result(TestResult):
             self.result_tmp[current_id]["tries"] += 1
         else:
             self.result_tmp[current_id] = dict(
-                result_code=0,
+                result_code=ResultStatus.PASS,
                 testCase_object=test,
                 test_output={},
                 image_paths={},
@@ -95,9 +98,17 @@ class Result(TestResult):
         current_id = str(threading.current_thread().ident)
         self.result_tmp[current_id]["duration"] += duration
         tries = self.result_tmp[current_id]["tries"]
-        if current_id in save_images.imageList:
-            tmp = save_images.imageList.pop(current_id)
-            self.result_tmp[current_id]["image_paths"][tries] = tmp
+        if current_id in save_images.image_list:
+            tmp = save_images.image_list.pop(current_id)
+            if self.failed_image and self.result_tmp[current_id]["result_code"] == ResultStatus.PASS:
+                for image_file in map(lambda _: _[-1], tmp):
+                    try:
+                        os.remove(image_file)
+                    except Exception as e:
+                        logging.error(f"清理图片文件失败：{e}")
+            else:
+                self.result_tmp[current_id]["image_paths"][tries] = list(map(lambda _: _[:-1], tmp))
+
         tmp = HandlerFactory.get_stream_value()
         self.result_tmp[current_id]["test_output"][tries] = tmp
 
@@ -105,7 +116,9 @@ class Result(TestResult):
         test_name = test.__class__.__name__ + "." + test.__getattribute__("_testMethodName")
         if (not self.retry and test_name not in retry_lists) or (
                 self.retry and test_name in no_retry_lists
-        ) or self.tries <= tries or self.result_tmp[current_id]["result_code"] in (0, 3):
+        ) or self.tries <= tries or self.result_tmp[current_id]["result_code"] in (
+                ResultStatus.PASS, ResultStatus.SKIP
+        ):
             self.result_tmp[current_id]["retry"] = False
 
         if self.result_tmp[current_id]["retry"]:
@@ -145,8 +158,8 @@ class Result(TestResult):
         logging.info((self.LANG == "cn" and "跳过测试： {}\n{}" or "Skip Test: {}\n{}").format(test, reason))
 
         current_id = str(threading.current_thread().ident)
-        self.result_tmp[current_id]["result_code"] = 3
-        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = 3
+        self.result_tmp[current_id]["result_code"] = ResultStatus.SKIP
+        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = ResultStatus.SKIP
         if current_id not in self.skip_set:
             self.skip_count += 1
             self.skip_set.add(current_id)
@@ -159,8 +172,8 @@ class Result(TestResult):
         logging.info((self.LANG == "cn" and "测试执行通过： {}" or "Pass Test: {}").format(test))
 
         current_id = str(threading.current_thread().ident)
-        self.result_tmp[current_id]["result_code"] = 0
-        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = 0
+        self.result_tmp[current_id]["result_code"] = ResultStatus.PASS
+        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = ResultStatus.PASS
         if current_id not in self.success_set:
             self.success_count += 1
             self.success_set.add(current_id)
@@ -178,8 +191,8 @@ class Result(TestResult):
         logging.error((self.LANG == "cn" and "测试产生错误： {}\n{}" or "Error Test: {}\n{}").format(test, _exc_str))
 
         current_id = str(threading.current_thread().ident)
-        self.result_tmp[current_id]["result_code"] = 2
-        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = 2
+        self.result_tmp[current_id]["result_code"] = ResultStatus.ERROR
+        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = ResultStatus.ERROR
         if current_id not in self.error_set:
             self.error_count += 1
             self.error_set.add(current_id)
@@ -188,13 +201,13 @@ class Result(TestResult):
         TestResult.addFailure(self, test, err)
         _, _exc_str = self.failures[-1]
 
-        self._steams_write_doc("Fail", test)
+        self._steams_write_doc("FAIL", test)
 
         logging.warning((self.LANG == "cn" and "测试未通过： {}\n{}" or "Failure: {}\n{}").format(test, _exc_str))
 
         current_id = str(threading.current_thread().ident)
-        self.result_tmp[current_id]["result_code"] = 1
-        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = 1
+        self.result_tmp[current_id]["result_code"] = ResultStatus.FAIL
+        self.result_tmp[current_id]["style"][self.result_tmp[current_id]["tries"]] = ResultStatus.FAIL
         if current_id not in self.failure_set:
             self.failure_count += 1
             self.failure_set.add(current_id)
