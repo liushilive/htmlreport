@@ -938,10 +938,6 @@ tr {
 @unique
 class ResultStatus(Enum):
     """测试结果状态"""
-    # PASS = 0, "passClass"
-    # FAIL = 1, "failClass"
-    # ERROR = 2, "errorClass"
-    # SKIP = 3, "skipClass"
 
     PASS = "passClass", "p", "passCase", "通过", "pass", "", "#1c965b"
     FAIL = "failClass", "f", "failCase", "失败", "fail", TemplateMixin.REPORT_XML_TC_FAILURE_TMPL, "#ff5722"

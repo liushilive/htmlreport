@@ -167,7 +167,9 @@ if __name__ == '__main__':
         back_off=1,
         retry=True,
         sequential_execution=True,
-        lang="cn"
+        lang="cn",
+        # image=False,
+        # failed_image=True
     )
     suite = unittest.TestSuite()
     suite_sub = unittest.TestSuite()

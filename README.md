@@ -55,6 +55,9 @@ with open("baidu.png", 'rb') as f:
     add_image(image, "图片标题", "图片描述")
 ```
 
+* `image` 参数可以控制全局是否添加图片
+* `failed_image` 参数可以控制是否只在测试失败时保存图片
+
 ### 失败重试
 
 测试方法前加入装饰器 `@retry` `@no_retry`，用于重试与不重试
