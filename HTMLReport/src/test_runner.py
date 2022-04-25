@@ -93,10 +93,12 @@ class TestRunner(TemplateMixin, TestSuite):
         random_name = f"test_{time.strftime('%Y_%m_%d_%H_%M_%S')}_{random.randint(1, 999)}"
         report_name = f'{report_file_name or random_name}.html'
         report_xml_name = f'{report_file_name or random_name}.xml'
+        report_md_name = f'{report_file_name or random_name}.md'
         self.log_name = f"{log_file_name or report_file_name or random_name}.log"
 
         self.path_report_file = os.path.join(dir_to, report_name)
         self.path_report_xml_file = os.path.join(dir_to, report_xml_name)
+        self.path_report_md_file = os.path.join(dir_to, report_md_name)
         self.path_log_file = os.path.join(dir_to, self.log_name)
 
         logging.getLogger().addHandler(HandlerFactory.get_rotating_file_handler(self.path_log_file))
@@ -254,7 +256,12 @@ class TestRunner(TemplateMixin, TestSuite):
         heading = self._generate_heading(result)
         log_file = self._generate_log(self.log_name)
         report, report_xml = self._create_report(result)
-
+        report_md = f"""- 总用例数量：{result.success_count + result.failure_count + result.error_count + result.skip_count}
+- 通过：{result.success_count}
+- 失败：{result.failure_count}
+- 错误：{result.error_count}
+- 跳过：{result.skip_count}
+"""
         ending = self._generate_ending()
         js = self._generate_js(result)
         output_html = self.HTML_TMPL.format(
@@ -273,6 +280,8 @@ class TestRunner(TemplateMixin, TestSuite):
             report_file.write(output_html)
         with open(self.path_report_xml_file, "w", encoding="utf-8") as report_xml_file:
             report_xml_file.write(report_xml)
+        with open(self.path_report_md_file, "w", encoding="utf-8") as report_md_file:
+            report_md_file.write(report_md)
 
     def _generate_stylesheet(self):
         return self.STYLESHEET_TMPL

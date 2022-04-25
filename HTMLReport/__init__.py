@@ -21,7 +21,7 @@ from .src.tools.log.handler_factory import HandlerFactory
 
 __author__ = '刘士'
 # __version__ = '2.0.6a'
-__version__ = '2.3.1'
+__version__ = '2.3.2'
 
 from .src.test_runner import TestRunner
 from .src.tools import data_driven as ddt
