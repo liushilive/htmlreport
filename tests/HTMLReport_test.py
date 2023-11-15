@@ -161,7 +161,7 @@ if __name__ == '__main__':
         title="一个简单的测试报告",
         description="随意描述",
         thread_count=5,
-        thread_start_wait=0.1,
+        thread_start_wait=1,
         tries=3,
         delay=0,
         back_off=1,
