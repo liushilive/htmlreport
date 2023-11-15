@@ -20,8 +20,9 @@ import threading
 from io import StringIO
 from logging import Handler, getLevelName
 
-_LOGGER_FORMAT = "%(asctime)s %(thread)7d %(levelname)8s %(filename)s(%(lineno)d) - %(message)s"
-
+# edit by Joffrey
+# _LOGGER_FORMAT = "%(asctime)s %(thread)7d %(levelname)8s %(filename)s(%(lineno)d) - %(message)s"
+_LOGGER_FORMAT = "[%(asctime)s] [%(filename)s(%(lineno)d)]: %(message)s"
 
 class _StreamHandler(Handler):
     """

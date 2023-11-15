@@ -57,3 +57,16 @@ def add_image(base64_data: Union[bytes, str], title: str = "", describe: str = "
             )
     except Exception as e:
         logging.error(f"保存截图失败\n{e}")
+
+# edit by Joffrey
+def addVideos(video_name):
+    """添加视频到报告
+    """
+    try:
+        if report_path:
+            current_id = str(threading.current_thread().ident)
+            if current_id not in image_list:
+                image_list[current_id] = []
+            image_list[current_id].append((f"videos/{video_name}","","录屏"))
+    except Exception as e:
+        logging.error(f"添加视频失败\n{e}")

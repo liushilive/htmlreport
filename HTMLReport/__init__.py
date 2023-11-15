@@ -26,7 +26,7 @@ __version__ = '2.3.2'
 from .src.test_runner import TestRunner
 from .src.tools import data_driven as ddt
 from .src.tools.retry_on_exception import retry, no_retry
-from .src.tools.save_images import add_image
+from .src.tools.save_images import add_image,addVideos
 
 for handler in logging.getLogger().handlers:
     handler: logging
@@ -40,6 +40,7 @@ logging.getLogger().addHandler(HandlerFactory.get_stream_handler())
 
 __all__ = [
     "add_image",
+    "addVideos",
     "TestRunner",
     "ddt",
     "retry",

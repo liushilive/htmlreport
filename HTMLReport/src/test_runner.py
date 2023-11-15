@@ -148,7 +148,7 @@ class TestRunner(TemplateMixin, TestSuite):
 
         self._handleModuleTearDown(result)
 
-    def run(self, test: TestSuite, debug: bool = False):
+    def run(self, test: TestSuite, debug: bool = False,threadSuite=0):
         """
         运行给定的测试用例或测试套件。
 
@@ -193,8 +193,20 @@ class TestRunner(TemplateMixin, TestSuite):
                 tmp_list = test_case_queue.get()
                 self._thread_pool_executor_test_case(tmp_list, result)
         else:
-            # 无序执行
-            self._thread_pool_executor_test_case(test, result)
+            if threadSuite:
+                # edit by Joffrey
+                # 按用例组多线程执行
+                self.result_list=[]
+                with ThreadPoolExecutor(max_workers=threadSuite) as ts:
+                    for suite in test:
+                        __result=Result(self.LANG,self.tries,self.delay,self.back_off,self.max_delay,self.retry,self.thread_start_wait,self.failed_image)
+                        self.result_list.append(__result)
+                        ts.submit(suite.run,result=__result)
+                        time.sleep(1)
+                result=self.merge_result()
+            else:
+                # 无序执行
+                self._thread_pool_executor_test_case(test, result)
 
         self.stopTime = datetime.datetime.now()
         if result.stdout_steams.getvalue().strip():
@@ -220,6 +232,20 @@ class TestRunner(TemplateMixin, TestSuite):
         self._generate_report(result)
         logging.info(s)
 
+        return result
+
+    def merge_result(self):
+        # add by Joffrey
+        # 新增函数，合并结果
+        result = Result(self.LANG,self.tries,self.delay,self.back_off,self.max_delay,self.retry,self.thread_start_wait)
+        for res in self.result_list:
+            # logging.info(f'debug: {res.result_tmp} \n\n\n')
+            result.success_count+=res.success_count
+            result.failure_count+=res.failure_count
+            result.error_count+=res.error_count
+            result.skip_count+=res.skip_count
+            result.result+=res.result
+            # result.result_tmp+=res.result_tmp
         return result
 
     @staticmethod
@@ -297,7 +323,9 @@ class TestRunner(TemplateMixin, TestSuite):
             fail=result.failure_count,
             error=result.error_count,
             skip=result.skip_count,
-            description=saxutils.escape(self.description).replace("\n", "<br />"),
+            # edit by Joffrey
+            # description=saxutils.escape(self.description).replace("\n", "<br />"),
+            description=self.description,
         )
         return heading
 
@@ -403,7 +431,10 @@ class TestRunner(TemplateMixin, TestSuite):
             img_list = ""
             if i.get(x) is not None:
                 for img in i.get(x):
-                    img_list += self._generate_img(img)
+                    if img[0].endswith('webm'):# edit by Joffrey
+                        img_list += self._generate_video(img)
+                    else:
+                        img_list += self._generate_img(img)
 
             script = self.REPORT_TEST_OUTPUT_TMPL.format(
                 id=f"{tid}.{x + 1}",
@@ -473,3 +504,7 @@ goChart({"chartData_cn" if self.LANG == "cn" else "chartData_en"});
 
     def _generate_img(self, img):
         return self.REPORT_IMG_TMPL.format(img_src=img[0], alt=img[1], title=img[2])
+    
+    # add by Joffrey
+    def _generate_video(self, img):
+        return self.REPORT_VIDEO_TMPL.format(img_src=img[0], alt=img[1], title=img[2])

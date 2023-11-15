@@ -602,7 +602,7 @@ a.popup_link:hover {
     right: 0;
 }
 
-img.pic {
+img.pic,video.pic{
     cursor: pointer;
     width: auto;
     height: auto;
@@ -615,6 +615,7 @@ img.pic {
 img.pic[data-src] {
     opacity: 0;
 }
+video.pic{max-width:150%;}
 
 #wrapper {
     margin: 0 auto;
@@ -912,6 +913,16 @@ tr {
     REPORT_IMG_TMPL = r"""<li class="figure_li">
     <figure>
         <img class="pic" data-src='{img_src}' title='{alt}' alt='{title}'/>
+    </figure>
+    {title}
+</li>
+"""
+
+    REPORT_VIDEO_TMPL = r"""<li class="figure_li">
+    <figure>
+        <video class="pic" controls="" title='{alt}' alt='{title}'>
+            <source src='{img_src}' type="video/webm">
+        </video>
     </figure>
     {title}
 </li>
