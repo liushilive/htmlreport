@@ -22,7 +22,82 @@ pip install HTMLReport
 则该 [Python安装指南](http://docs.python-guide.org/en/latest/starting/installation/ "Python安装指南")
 可以指导您完成该过程。
 
+## 更新日志
+
+### 2023-11-15 新增功能 - by Joffrey
+
+1、按用例组多线程执行
+2、在报告中添加视频
+
 ## 使用方法
+
+### 按用例组多线程执行
+
+在 run 函数中传入 threadSuite 参数，threadSuite 为用例组的数量，如下：
+
+```python
+suiteList=[]
+suiteList.append(unittest.TestLoader().loadTestsFromTestCase(testcase_class))
+
+HTMLReport.TestRunner(
+    title="Web端UI自动测试",
+    description=f'运行环境: <span class="info">{args.env.upper()}</span></br>地址: <span class="info">{url}</span>',
+    output_path=f'report/{args.timeStr}',
+    report_file_name='index',
+    sequential_execution=0,tries=2,delay=3,retry=True,
+).run(unittest.TestSuite(suiteList),threadSuite=len(suiteList))
+```
+
+### 在报告中添加视频
+
+需要使用 playwright 作为驱动
+
+```python
+from HTMLReport import addImage,addVideos
+from playwright.sync_api import sync_playwright
+
+class Test01_CLASS(ParameTestCase):
+    @classmethod
+    def setUpClass(cls):
+        logging.info(' ########## 测试开始 ########## ')
+        cls.playwright=sync_playwright().start()
+        cls.pw_browser=cls.playwright.chromium.launch()
+        cls.size={"width":1980,"height":1260}
+        cls.URL="http://www.baidu.com"
+        
+    def setUp(self):
+        self.context=self.pw_browser.new_context(record_video_dir=f'report/{self.args.timeStr}/videos/',record_video_size=self.size) # 开始录屏
+        self.pw_page=self.context.new_page()
+        self.pw_page.set_viewport_size(self.size)
+        self.pw_page.goto(self.URL)
+        add_context_cookie(self.context,readCookie())
+
+
+    def test_01(self,productCode):
+        '''test_01 标题描述'''
+        doSomethings.......
+        
+        # 使用 playwright 截图
+        addImage(base64.b64encode(self.pw_page.screenshot()).decode(),f'test 截图1')
+
+        doSomethings.......
+        logging.info('测试结束')
+
+
+
+    def tearDown(self):
+        self.context.close() # 结束录屏
+        addVideos(self.pw_page.video.path().split('/')[-1]) # 添加视频到报告
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.pw_browser.close()
+        cls.playwright.stop()
+        logging.info(' ########## 测试结束 ########## ')
+
+if __name__=='__main__':
+    unittest.main()
+```
 
 ### 日志
 
