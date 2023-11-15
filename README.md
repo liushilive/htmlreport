@@ -27,6 +27,7 @@ pip install HTMLReport
 ### 2023-11-15 新增功能 - by Joffrey
 
 1、按用例组多线程执行
+
 2、在报告中添加视频
 
 ## 使用方法
