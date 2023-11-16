@@ -413,8 +413,10 @@ function load() {
     let nav_lang = (location.hash || '').replace(/#/, '');
     if (nav_lang === 'cn' || nav_lang === 'en') el_wrapper.className = 'lang-' + nav_lang;
 
-    let images = document.getElementsByClassName("pic");
-    let lens = images.length;
+    let images = document.querySelectorAll('img.pic');
+    let lens = images.length;  
+    let videos = document.getElementsByTagName("video");
+    let lens_videos = videos.length;
     let popup = document.getElementById("popup");
 
     function showBig(src, title, alt) {
@@ -431,12 +433,26 @@ function load() {
         showBig(target.src, target.title, target.alt);
     }
 
+    function showBig_video(src, title, alt) {
+        popup.getElementsByClassName("bg")[0].innerHTML='<video src="'+src+'" controls title="'+title+'" alt="'+alt+'"></video>';
+        popup.style.display = "block";
+        popup.style.zIndex = "999999";
+      };
+
+    function show_video(event) {
+        event = event || window.event;
+        let target = document.elementFromPoint(event.clientX, event.clientY);
+        showBig_video(target.src, target.title, target.alt);
+      }
+
     for (let i = 0; i < lens; i++) images[i].onclick = show;
+    for (let i = 0; i < lens_videos; i++) videos[i].onclick = show_video;
 
     popup.onclick = function () {
-        document.getElementById("popup-img").removeAttribute("src")
-        document.getElementById("popup-img").removeAttribute("title")
-        document.getElementById("popup-img").removeAttribute("alt")
+        popup.getElementsByClassName("bg")[0].innerHTML='<img id="popup-img" src="" alt="">';
+        // document.getElementById("popup-img").removeAttribute("src")
+        // document.getElementById("popup-img").removeAttribute("title")
+        // document.getElementById("popup-img").removeAttribute("alt")
         popup.style.display = "none";
         popup.style.zIndex = "-1";
     };
@@ -615,7 +631,7 @@ img.pic,video.pic{
 img.pic[data-src] {
     opacity: 0;
 }
-video.pic{max-width:150%;}
+.figure_li_video{width:90em !important;}
 
 #wrapper {
     margin: 0 auto;
@@ -918,9 +934,9 @@ tr {
 </li>
 """
 
-    REPORT_VIDEO_TMPL = r"""<li class="figure_li">
+    REPORT_VIDEO_TMPL = r"""<li class="figure_li figure_li_video">
     <figure>
-        <video class="pic" controls="" title='{alt}' alt='{title}'>
+        <video class="pic" controls title='{alt}' alt='{title}'>
             <source src='{img_src}' type="video/webm">
         </video>
     </figure>
