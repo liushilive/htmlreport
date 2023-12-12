@@ -21,12 +21,12 @@ from .src.tools.log.handler_factory import HandlerFactory
 
 __author__ = '刘士'
 # __version__ = '2.0.6a'
-__version__ = '2.3.2'
+__version__ = '2.4.0'
 
 from .src.test_runner import TestRunner
 from .src.tools import data_driven as ddt
 from .src.tools.retry_on_exception import retry, no_retry
-from .src.tools.save_images import add_image,addVideos
+from .src.tools.save_images import add_image, addVideos
 
 for handler in logging.getLogger().handlers:
     handler: logging
