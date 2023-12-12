@@ -936,9 +936,7 @@ tr {
 
     REPORT_VIDEO_TMPL = r"""<li class="figure_li figure_li_video">
     <figure>
-        <video class="pic" controls title='{alt}' alt='{title}'>
-            <source src='{img_src}' type="video/webm">
-        </video>
+        <video class="pic" controls src='{img_src}' title='{alt}' alt='{title}'></video>
     </figure>
     {title}
 </li>
