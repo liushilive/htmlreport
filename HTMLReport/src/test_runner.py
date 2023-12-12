@@ -431,7 +431,7 @@ class TestRunner(TemplateMixin, TestSuite):
             img_list = ""
             if i.get(x) is not None:
                 for img in i.get(x):
-                    if img[0].endswith('webm'):# edit by Joffrey
+                    if img[0].split('.')[-1] in ['webm','mp4']:# edit by Joffrey
                         img_list += self._generate_video(img)
                     else:
                         img_list += self._generate_img(img)
