@@ -18,7 +18,7 @@ import logging
 import os
 import random
 import threading
-import time
+import time,traceback
 from typing import Union
 
 report_path = ""
@@ -40,14 +40,12 @@ def add_image(base64_data: Union[bytes, str], title: str = "", describe: str = "
 
     try:
         current_id = str(threading.current_thread().ident)
-        if current_id not in image_list:
-            image_list[current_id] = []
+        if current_id not in image_list:image_list[current_id] = []
 
         random_name = f"image_{current_id}_{time.strftime('%Y_%m_%d_%H_%M_%S')}_{random.randint(1, 999)}.jpg"
 
         image_path = os.path.join(report_path, "images")
-        if not os.path.exists(image_path):
-            os.makedirs(image_path)
+        if not os.path.exists(image_path):os.makedirs(image_path)
 
         image_file = os.path.join(image_path, random_name)
         with open(image_file, "wb") as f:
@@ -59,14 +57,14 @@ def add_image(base64_data: Union[bytes, str], title: str = "", describe: str = "
         logging.error(f"保存截图失败\n{e}")
 
 # edit by Joffrey
-def addVideos(video_name):
+def addVideos(video_path,width='auto'):
     """添加视频到报告
     """
+    # video_path=f'{report_path}/videos/aaa.mp4'
     try:
         if report_path:
-            current_id = str(threading.current_thread().ident)
-            if current_id not in image_list:
-                image_list[current_id] = []
-            image_list[current_id].append((f"videos/{video_name}","","录屏"))
+            current_id=str(threading.current_thread().ident)
+            if current_id not in image_list:image_list[current_id]=[]
+            image_list[current_id].append((video_path,"","录屏",width))
     except Exception as e:
-        logging.error(f"添加视频失败\n{e}")
+        logging.error(f"添加视频失败\n{traceback.format_exc()}")

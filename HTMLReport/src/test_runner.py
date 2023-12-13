@@ -507,4 +507,4 @@ goChart({"chartData_cn" if self.LANG == "cn" else "chartData_en"});
     
     # add by Joffrey
     def _generate_video(self, img):
-        return self.REPORT_VIDEO_TMPL.format(img_src=img[0], alt=img[1], title=img[2])
+        return self.REPORT_VIDEO_TMPL.format(img_src=img[0], alt=img[1], title=img[2],width=img[3])

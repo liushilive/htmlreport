@@ -620,7 +620,6 @@ a.popup_link:hover {
 
 img.pic,video.pic{
     cursor: pointer;
-    width: auto;
     height: auto;
     max-width: 100%;
     max-height: 100%;
@@ -936,7 +935,7 @@ tr {
 
     REPORT_VIDEO_TMPL = r"""<li class="figure_li figure_li_video">
     <figure>
-        <video class="pic" controls src='{img_src}' title='{alt}' alt='{title}'></video>
+        <video class="pic" controls src='{img_src}' title='{alt}' alt='{title}'  width='{width}'></video>
     </figure>
     {title}
 </li>
