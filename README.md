@@ -40,7 +40,7 @@ pip install HTMLReport
 
 ## 使用方法
 
-### 按用例组多线程执行
+### ● 按用例组多线程执行
 
 在 run 函数中传入 threadSuite 参数，threadSuite 为用例组的数量，如下：
 
@@ -57,9 +57,9 @@ HTMLReport.TestRunner(
 ).run(unittest.TestSuite(suiteList),threadSuite=len(suiteList))
 ```
 
-### 在报告中添加视频
+### ● 在报告中添加视频
 
-需要使用 playwright 作为驱动
+#### 1、使用 playwright 时
 
 ```python
 from HTMLReport import addImage,addVideos
@@ -96,7 +96,7 @@ class Test01_CLASS(ParameTestCase):
 
     def tearDown(self):
         self.context.close() # 结束录屏
-        addVideos(self.pw_page.video.path().split('/')[-1]) # 添加视频到报告
+        addVideos(f"videos/{self.pw_page.video.path().split('/')[-1]}") # 添加视频到报告
 
     @classmethod
     def tearDownClass(cls):
@@ -108,7 +108,25 @@ if __name__=='__main__':
     unittest.main()
 ```
 
-### 日志
+#### 2、使用 appium 时
+
+```python
+# 开始录屏
+driver.start_recording_screen(videoType='h264',videoSize='720x1280',videoScale='720:-2',timeLimit=600)
+
+#结束录屏
+def stop_recording(args,videoName=None):
+    mp4_base64=args.driver.stop_recording_screen()
+    mp4_decode=base64.b64decode(mp4_base64)
+    savePath=f'report/{args.report_timeStr}/videos'
+    if not os.path.exists(savePath):os.makedirs(savePath)
+    if not videoName:videoName=time.strftime('%H%M%S')
+    with open(f"{savePath}/{videoName}.mp4","wb") as fd:fd.write(mp4_decode)
+    logging.info(f'录屏成功: videos/{videoName}.mp4')
+    addVideos(f'videos/{videoName}.mp4',width='400')# 添加视频到报告
+```
+
+### ● 日志
 
 为测试报告中添加过程日志，在多线程下，在报告中会分别记录每个线程的日志，同时会产生与测试报告同名的测试 log 文件。
 
@@ -122,7 +140,7 @@ logging.error("测试")
 logging.critical("测试")
 ```
 
-### 图片信息
+### ● 图片信息
 
 为测试报告添加图片信息，请将图片信息编码为 base64 编码。
 
@@ -142,17 +160,17 @@ with open("baidu.png", 'rb') as f:
 * `image` 参数可以控制全局是否添加图片
 * `failed_image` 参数可以控制是否只在测试失败时保存图片
 
-### 失败重试
+### ● 失败重试
 
 测试方法前加入装饰器 `@retry` `@no_retry`，用于重试与不重试
 
-### 数据驱动
+### ● 数据驱动
 
 测试类前加入装饰器 `@ddt.ddt`
 
 测试方法前加入装饰器 `@ddt.data(*data)`
 
-### 实例
+### ● 实例
 
 ```python
 import base64
