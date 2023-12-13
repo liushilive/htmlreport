@@ -24,11 +24,19 @@ pip install HTMLReport
 
 ## 更新日志
 
+### 2023-12-13 更新及修复 - by Joffrey
+
+1、添加视频增加width参数 例: addVideos('videos/videoName.mp4',width='400') #width默认是 auto
+
+2、修复报告中的视频样式
+
 ### 2023-11-15 新增功能 - by Joffrey
 
 1、按用例组多线程执行
 
 2、在报告中添加视频
+
+
 
 ## 使用方法
 
